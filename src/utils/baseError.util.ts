@@ -10,6 +10,10 @@ export class BaseError extends Error {
     Error.captureStackTrace(this, this.constructor);
   }
   handleError(res: Response) {
-    return res.status(this.status).json({ message: this.message });
+    return res.status(this.status).json({
+      success: false,
+      message: this.message,
+      data: null,
+    });
   }
 }

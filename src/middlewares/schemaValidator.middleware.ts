@@ -2,18 +2,21 @@ import { Request, Response, NextFunction } from "express";
 import { ZodError, ZodSchema } from "zod";
 import { HttpStatusCode } from "../enums/statusCode.enum";
 
-export const validateRequest = (schema: ZodSchema) => {
+export const validateRequest = (schema: ZodSchema<any>) => {
   return (req: Request, res: Response, next: NextFunction) => {
     try {
-      schema.parse(req.body);
+      const parsedData = schema.parse({
+        body: req.body,
+        params: req.params,
+      });
+      req.body = parsedData.body;
       next();
     } catch (error) {
       if (error instanceof ZodError) {
-        // const errorMessage = error.errors.map((e) => e.message).join(", ");
         res.status(HttpStatusCode.BAD_REQUEST).json({
           success: false,
-          message: error.errors[0].message,
-          // message: errorMessage,
+          message: error.issues[0].message,
+          data: null,
         });
       } else {
         next(error);
