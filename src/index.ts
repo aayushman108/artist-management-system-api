@@ -1,11 +1,10 @@
 import express from "express";
-import dotenv from "dotenv";
 import cors from "cors";
 import { errorHandler } from "./middlewares";
 import cookieParser from "cookie-parser";
 import "./config/cloudinary.config";
-
-dotenv.config();
+import { ENV } from "./constants";
+import { db } from "./database/db";
 
 const app = express();
 
@@ -17,6 +16,25 @@ app.use(cors());
 
 app.use(errorHandler);
 
-app.listen(8000, () => {
-  console.log("Listening on port 8000");
-});
+const PORT = ENV.PORT;
+
+const startServer = async () => {
+  try {
+    // Verify database connection
+    await db.raw("SELECT 1");
+    console.log("Database connected successfully");
+
+    app.listen(PORT, () => {
+      console.log(`Server running on port ${PORT}`);
+    });
+  } catch (error) {
+    console.error("Failed to connect to the database:", error);
+    if (error instanceof Error) {
+      console.error("Error Message:", error.message);
+      console.error("Error Stack:", error.stack);
+    }
+    process.exit(1);
+  }
+};
+
+startServer();
