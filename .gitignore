@@ -3,3 +3,5 @@
 
 # Ignore environment files
 .env
+
+dist/
