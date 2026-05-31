@@ -9,7 +9,8 @@
     "paths": {
       "src/*": ["src/*"]
     },
-    "esModuleInterop": true
+    "esModuleInterop": true,
+    "skipLibCheck": true
   },
   "include": ["src/**/*"],
   "exclude": ["node_modules", "dist"]
