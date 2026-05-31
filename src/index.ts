@@ -5,14 +5,25 @@ import cookieParser from "cookie-parser";
 import "./config/cloudinary.config";
 import { ENV } from "./constants";
 import { db } from "./database/db";
+import { authRoute } from "./routes";
+import { initEmailListeners } from "./listeners/email.listener";
+
+initEmailListeners();
 
 const app = express();
+
+app.use(
+  cors({
+    origin: true,
+    credentials: true,
+  }),
+);
 
 app.use(express.urlencoded({ extended: false }));
 app.use(express.json());
 app.use(cookieParser());
 
-app.use(cors());
+app.use("/api/auth", authRoute);
 
 app.use(errorHandler);
 

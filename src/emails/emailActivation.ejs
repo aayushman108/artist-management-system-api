@@ -1,0 +1,39 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Verify Your Email - Artist Management System</title>
+    <link rel="stylesheet" href="style.css" />
+  </head>
+  <body>
+    <div class="container">
+      <div class="logo">Artist Management System</div>
+
+      <h1>Verification code</h1>
+
+      <p>Hello <%= username %>,</p>
+      <p>
+        To complete your registration and secure your
+        <strong>Artist Management System</strong> account, please use the following
+        verification code:
+      </p>
+
+      <div class="otp-container">
+        <div class="otp-code"><%= activationCode %></div>
+        <div class="expiry">Expires in 10 minutes</div>
+      </div>
+
+      <p style="font-size: 14px; color: #888888">
+        If you didn't request this code, you can safely ignore this email.
+      </p>
+
+      <div class="divider"></div>
+
+      <div class="footer">
+        <p>Artist Management System</p>
+        <p>© 2026 All rights reserved.</p>
+      </div>
+    </div>
+  </body>
+</html>
