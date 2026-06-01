@@ -7,6 +7,7 @@ import {
   asyncHandler,
   sendFailureResponse,
   sendSuccessResponse,
+  UnAuthorizedError,
 } from "src/utils";
 import { ILoginInput, ISignupInput } from "src/validationSchema";
 
@@ -60,6 +61,24 @@ const login = asyncHandler(async (req: Request, res: Response) => {
   });
 });
 
+const refresh = asyncHandler(async (req: Request, res: Response) => {
+  const cookies = req.cookies;
+
+  if (!cookies?.jwt) {
+    throw new UnAuthorizedError();
+  }
+
+  const refreshToken = cookies.jwt;
+
+  const { accessToken, user } = await authService.refresh(refreshToken);
+
+  return sendSuccessResponse(res, {
+    message: "Token refreshed successfully.",
+    data: { accessToken, user },
+    statusCode: HttpStatusCode.OK,
+  });
+});
+
 const logout = asyncHandler(async (req: Request, res: Response) => {
   const cookies = req.cookies;
   if (!cookies?.jwt) {
@@ -84,4 +103,4 @@ const logout = asyncHandler(async (req: Request, res: Response) => {
   });
 });
 
-export const authController = { signup, verifyEmail, login, logout };
+export const authController = { signup, verifyEmail, login, refresh, logout };

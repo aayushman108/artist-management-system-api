@@ -16,4 +16,5 @@ authRouter.post(
   validateRequest(UserValidation.loginSchema),
   authController.login,
 );
+authRouter.get("/refresh", authController.refresh);
 authRouter.get("/logout", verifyJWT, authController.logout);

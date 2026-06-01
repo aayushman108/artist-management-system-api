@@ -124,6 +124,28 @@ async function login(user: ILoginInput) {
   return userFromDb;
 }
 
+async function refresh(refreshToken: string) {
+  try {
+    const decoded = jwtService.verifyRefreshToken(refreshToken) as {
+      id: string;
+    };
+    if (!decoded?.id) {
+      throw new UnAuthorizedError("Unauthorized: Invalid Refresh Token");
+    }
+
+    const user = await authDao.findUserById(decoded.id);
+
+    if (!user) {
+      throw new NotFoundError("User not found");
+    }
+
+    const accessToken = jwtService.generateAccessToken(user);
+    return { accessToken, user: { ...user, password_hash: undefined } };
+  } catch (error) {
+    throw new UnAuthorizedError("Invalid or expired refresh token.");
+  }
+}
+
 async function logout(refreshToken: string) {
   try {
     const decoded = jwtService.verifyRefreshToken(refreshToken) as {
@@ -149,5 +171,6 @@ export const authService = {
   verifyEmailVerificationToken,
   createUser,
   login,
+  refresh,
   logout,
 };
