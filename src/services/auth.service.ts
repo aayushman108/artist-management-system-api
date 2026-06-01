@@ -2,9 +2,10 @@ import {
   appEmitter,
   ConflictError,
   EVENTS,
+  NotFoundError,
   UnAuthorizedError,
 } from "src/utils";
-import { ISignupInput } from "src/validationSchema";
+import { ILoginInput, ISignupInput } from "src/validationSchema";
 import jwt, { Secret } from "jsonwebtoken";
 import { ENV } from "src/constants";
 import { authDao } from "src/dao";
@@ -93,4 +94,38 @@ async function createUser(user: ISignupInput & { status?: UserStatus }) {
   return newUser;
 }
 
-export const authService = { signup, verifyEmailVerificationToken, createUser };
+async function comparePassword(password: string, hashedpasswordFromDb: string) {
+  try {
+    const isPasswordMatched = await bcrypt.compare(
+      password,
+      hashedpasswordFromDb,
+    );
+    if (!isPasswordMatched) {
+      throw new UnAuthorizedError("Password is unmatched!!");
+    }
+    return isPasswordMatched;
+  } catch (error) {
+    throw new UnAuthorizedError("Password is unmatched!!");
+  }
+}
+
+async function login(user: ILoginInput) {
+  const { email, password } = user;
+
+  const userFromDb = await authDao.findByEmail(email);
+
+  if (!userFromDb) {
+    throw new NotFoundError(`User with ${email} is not registered!!`);
+  }
+
+  await comparePassword(password, userFromDb.password_hash);
+
+  return userFromDb;
+}
+
+export const authService = {
+  signup,
+  verifyEmailVerificationToken,
+  createUser,
+  login,
+};

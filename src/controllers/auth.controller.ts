@@ -1,8 +1,10 @@
 import { Request, Response } from "express";
+import { cookieOptions } from "src/config/cookie.config";
+import { ENV } from "src/constants";
 import { HttpStatusCode, UserStatus } from "src/enums";
-import { authService } from "src/services";
+import { authService, jwtService } from "src/services";
 import { asyncHandler, sendSuccessResponse } from "src/utils";
-import { ISignupInput } from "src/validationSchema";
+import { ILoginInput, ISignupInput } from "src/validationSchema";
 
 const signup = asyncHandler(async (req: Request, res: Response) => {
   const data = await authService.signup(req.body as ISignupInput);
@@ -28,4 +30,30 @@ const verifyEmail = asyncHandler(async (req: Request, res: Response) => {
   });
 });
 
-export const authController = { signup, verifyEmail };
+const login = asyncHandler(async (req: Request, res: Response) => {
+  const { email, password } = req.body as ILoginInput;
+
+  const user = await authService.login({ email, password });
+
+  const accessToken = jwtService.generateAccessToken(user);
+
+  const refreshToken = jwtService.generateRefreshToken(user);
+
+  res.cookie("jwt", refreshToken, {
+    ...cookieOptions,
+    maxAge:
+      Number(ENV.REFRESH_TOKEN_EXPIRY?.trim()?.slice(0, -1)) *
+      24 *
+      60 *
+      60 *
+      1000,
+  });
+
+  return sendSuccessResponse(res, {
+    message: "Successfully logged in",
+    data: { ...user, password_hash: undefined, accessToken },
+    statusCode: HttpStatusCode.OK,
+  });
+});
+
+export const authController = { signup, verifyEmail, login };

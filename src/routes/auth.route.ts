@@ -3,11 +3,16 @@ import { authController } from "src/controllers";
 import { validateRequest } from "src/middlewares";
 import { UserValidation } from "src/validationSchema";
 
-export const authRoute = express.Router();
+export const authRouter = express.Router();
 
-authRoute.post(
+authRouter.post(
   "/signup",
   validateRequest(UserValidation.signupSchema),
   authController.signup,
 );
-authRoute.post("/verify-email", authController.verifyEmail);
+authRouter.post("/verify-email", authController.verifyEmail);
+authRouter.post(
+  "/login",
+  validateRequest(UserValidation.loginSchema),
+  authController.login,
+);

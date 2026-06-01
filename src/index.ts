@@ -5,7 +5,7 @@ import cookieParser from "cookie-parser";
 import "./config/cloudinary.config";
 import { ENV } from "./constants";
 import { db } from "./database/db";
-import { authRoute } from "./routes";
+import { authRouter } from "./routes";
 import { initEmailListeners } from "./listeners/email.listener";
 
 initEmailListeners();
@@ -23,7 +23,7 @@ app.use(express.urlencoded({ extended: false }));
 app.use(express.json());
 app.use(cookieParser());
 
-app.use("/api/auth", authRoute);
+app.use("/api/auth", authRouter);
 
 app.use(errorHandler);
 
