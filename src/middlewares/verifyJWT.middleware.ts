@@ -30,7 +30,7 @@ export const verifyJWT = async (
     }
 
     req.userId = user.id;
-    req.role = user.role as UserRole;
+    req.userRole = user.role as UserRole;
     next();
   } catch (err) {
     next(err);
