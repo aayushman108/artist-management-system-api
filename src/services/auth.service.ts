@@ -124,6 +124,18 @@ async function login(user: ILoginInput) {
   return userFromDb;
 }
 
+async function getMe(userId: string) {
+  const user = await authDao.findUserById(userId);
+  if (!user) {
+    throw new NotFoundError("User not found");
+  }
+
+  return {
+    ...user,
+    password_hash: undefined,
+  };
+}
+
 async function refresh(refreshToken: string) {
   try {
     const decoded = jwtService.verifyRefreshToken(refreshToken) as {
@@ -171,6 +183,7 @@ export const authService = {
   verifyEmailVerificationToken,
   createUser,
   login,
+  getMe,
   refresh,
   logout,
 };
