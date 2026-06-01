@@ -56,4 +56,27 @@ const login = asyncHandler(async (req: Request, res: Response) => {
   });
 });
 
-export const authController = { signup, verifyEmail, login };
+const logout = asyncHandler(async (req: Request, res: Response) => {
+  const cookies = req.cookies;
+  if (!cookies?.jwt) {
+    res
+      .status(HttpStatusCode.NO_CONTENT)
+      .json({ message: "No content available" });
+    return;
+  }
+
+  const refreshToken = cookies.jwt;
+
+  await authService.logout(refreshToken);
+
+  res.clearCookie("jwt", {
+    ...cookieOptions,
+  });
+
+  return sendSuccessResponse(res, {
+    message: "Successfully logged out.",
+    statusCode: HttpStatusCode.OK,
+  });
+});
+
+export const authController = { signup, verifyEmail, login, logout };

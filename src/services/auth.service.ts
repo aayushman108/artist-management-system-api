@@ -11,6 +11,7 @@ import { ENV } from "src/constants";
 import { authDao } from "src/dao";
 import bcrypt from "bcrypt";
 import { UserStatus } from "src/enums";
+import { jwtService } from "./jwt.service";
 
 interface ITokenVerificationBody {
   token: string;
@@ -123,9 +124,30 @@ async function login(user: ILoginInput) {
   return userFromDb;
 }
 
+async function logout(refreshToken: string) {
+  try {
+    const decoded = jwtService.verifyRefreshToken(refreshToken) as {
+      id: string;
+    };
+
+    if (!decoded?.id) {
+      throw new UnAuthorizedError("Unauthorized: Invalid Refresh Token");
+    }
+
+    const user = await authDao.findUserById(decoded.id);
+
+    if (!user) {
+      throw new NotFoundError("User not found");
+    }
+  } catch (error) {
+    throw new UnAuthorizedError("Error while logging out!!");
+  }
+}
+
 export const authService = {
   signup,
   verifyEmailVerificationToken,
   createUser,
   login,
+  logout,
 };

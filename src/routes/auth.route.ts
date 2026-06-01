@@ -1,6 +1,6 @@
 import express from "express";
 import { authController } from "src/controllers";
-import { validateRequest } from "src/middlewares";
+import { validateRequest, verifyJWT } from "src/middlewares";
 import { UserValidation } from "src/validationSchema";
 
 export const authRouter = express.Router();
@@ -16,3 +16,4 @@ authRouter.post(
   validateRequest(UserValidation.loginSchema),
   authController.login,
 );
+authRouter.get("/logout", verifyJWT, authController.logout);
