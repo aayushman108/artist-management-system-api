@@ -56,7 +56,7 @@ const login = asyncHandler(async (req: Request, res: Response) => {
 
   return sendSuccessResponse(res, {
     message: "Successfully logged in",
-    data: { ...user, password_hash: undefined, accessToken },
+    data: { user: { ...user, password_hash: undefined }, accessToken },
     statusCode: HttpStatusCode.OK,
   });
 });
