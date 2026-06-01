@@ -3,7 +3,11 @@ import { cookieOptions } from "src/config/cookie.config";
 import { ENV } from "src/constants";
 import { HttpStatusCode, UserStatus } from "src/enums";
 import { authService, jwtService } from "src/services";
-import { asyncHandler, sendSuccessResponse } from "src/utils";
+import {
+  asyncHandler,
+  sendFailureResponse,
+  sendSuccessResponse,
+} from "src/utils";
 import { ILoginInput, ISignupInput } from "src/validationSchema";
 
 const signup = asyncHandler(async (req: Request, res: Response) => {
@@ -59,9 +63,10 @@ const login = asyncHandler(async (req: Request, res: Response) => {
 const logout = asyncHandler(async (req: Request, res: Response) => {
   const cookies = req.cookies;
   if (!cookies?.jwt) {
-    res
-      .status(HttpStatusCode.NO_CONTENT)
-      .json({ message: "No content available" });
+    sendFailureResponse(res, {
+      message: "No content available",
+      statusCode: HttpStatusCode.NO_CONTENT,
+    });
     return;
   }
 
