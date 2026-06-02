@@ -1,0 +1,49 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>You Have Been Invited - Artist Management System</title>
+    <link rel="stylesheet" href="style.css" />
+  </head>
+  <body>
+    <div class="container">
+      <div class="logo">Artist Management System</div>
+
+      <h1>You have been invited!</h1>
+
+      <p>Hello,</p>
+      <p>
+        You have been invited to join <strong><%= companyName %></strong> as an <strong><%= role.replace('_', ' ').toUpperCase() %></strong>.
+      </p>
+
+      <p>
+        Please click the button below to accept your invitation, set up your password, and access your account.
+      </p>
+
+      <div class="button-container">
+        <a href="<%= inviteUrl %>" class="button">Accept Invitation</a>
+      </div>
+
+      <p style="font-size: 14px; color: #888888">
+        This invitation link expires in <strong><%= expiresInDays %> days</strong>. Please accept it before then.
+      </p>
+
+      <p style="font-size: 14px; color: #888888">
+        If the button doesn't work, you can copy and paste this link into your browser:<br/>
+        <a href="<%= inviteUrl %>" style="color: #888888; word-break: break-all;"><%= inviteUrl %></a>
+      </p>
+
+      <p style="font-size: 14px; color: #888888">
+        If you didn't expect this invitation, you can safely ignore this email.
+      </p>
+
+      <div class="divider"></div>
+
+      <div class="footer">
+        <p>Artist Management System</p>
+        <p>© 2026 All rights reserved.</p>
+      </div>
+    </div>
+  </body>
+</html>

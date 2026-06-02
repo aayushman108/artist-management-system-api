@@ -18,6 +18,7 @@ export const validateRequest = (schema: ZodSchema<any>) => {
           message: error.issues[0].message,
           data: null,
         });
+        return;
       } else {
         next(error);
       }

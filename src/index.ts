@@ -1,11 +1,11 @@
 import express from "express";
 import cors from "cors";
-import { errorHandler } from "./middlewares";
+import { errorHandler, verifyJWT } from "./middlewares";
 import cookieParser from "cookie-parser";
 import "./config/cloudinary.config";
 import { ENV } from "./constants";
 import { db } from "./database/db";
-import { authRouter } from "./routes";
+import { authRouter, userRouter } from "./routes";
 import { initEmailListeners } from "./listeners/email.listener";
 
 initEmailListeners();
@@ -24,6 +24,8 @@ app.use(express.json());
 app.use(cookieParser());
 
 app.use("/api/auth", authRouter);
+
+app.use("/api/users", userRouter);
 
 app.use(errorHandler);
 
