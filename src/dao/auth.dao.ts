@@ -18,13 +18,13 @@ const findUserById = async (userId: string): Promise<Auth.IUser> => {
 const createUser = async (
   user: ISignupInput,
 ): Promise<Exclude<Auth.IUser, "password_hash">> => {
-  const { companyName, email, password, role } = user;
+  const { firstName, lastName, email, password, role } = user;
 
   const { rows } = await db.raw(
-    `INSERT INTO users (id, company_name, email, password_hash, role, status) 
+    `INSERT INTO users (id, first_name, last_name, email, password_hash, role, status) 
        VALUES (gen_random_uuid(), ?, ?, ?, ?, 'active') 
        RETURNING to_jsonb(users) - 'password_hash' AS user`,
-    [companyName, email, password, role],
+    [firstName, lastName, email, password, role],
   );
   return rows[0].user;
 };

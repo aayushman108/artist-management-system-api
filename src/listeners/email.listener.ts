@@ -4,18 +4,14 @@ import { ENV } from "src/constants";
 // Signup verification email listener
 appEmitter.on(
   EVENTS.EMAIL.SIGNUP,
-  async (data: {
-    email: string;
-    companyName: string;
-    activationCode: string;
-  }) => {
+  async (data: { email: string; name: string; activationCode: string }) => {
     try {
       await sendMail({
         email: data.email,
         subject: "Verify your email",
         template: "emailActivation.ejs",
         data: {
-          username: data.companyName,
+          username: data.name,
           activationCode: data.activationCode,
         },
       });

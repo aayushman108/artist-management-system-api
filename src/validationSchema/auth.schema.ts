@@ -9,12 +9,19 @@ export class AuthValidation {
   // Signup schema
   static signupSchema = z.object({
     body: z.object({
-      companyName: z.preprocess(
+      firstName: z.preprocess(
         requiredPreprocessor,
         z
-          .string({ message: "Company name is required" })
-          .min(1, { message: "Company name is required" })
-          .max(255, { message: "Company name must not exceed 255 characters" }),
+          .string({ message: "First name is required" })
+          .min(1, { message: "First name is required" })
+          .max(100, { message: "First name must not exceed 100 characters" }),
+      ),
+      lastName: z.preprocess(
+        requiredPreprocessor,
+        z
+          .string({ message: "Last name is required" })
+          .min(1, { message: "Last name is required" })
+          .max(100, { message: "Last name must not exceed 100 characters" }),
       ),
       email: z.preprocess(
         emailPreprocessor,

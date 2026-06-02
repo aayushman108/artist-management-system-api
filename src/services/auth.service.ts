@@ -43,7 +43,7 @@ async function signup(user: ISignupInput) {
 
   appEmitter.emit(EVENTS.EMAIL.SIGNUP, {
     email: user.email,
-    companyName: user.companyName,
+    name: `${user.firstName} ${user.lastName}`,
     activationCode,
   });
 
