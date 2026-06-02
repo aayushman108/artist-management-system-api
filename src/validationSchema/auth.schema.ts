@@ -5,7 +5,7 @@ import {
 } from "src/utils/validationSchemaPreprocessor";
 import { z } from "zod";
 
-export class UserValidation {
+export class AuthValidation {
   // Signup schema
   static signupSchema = z.object({
     body: z.object({
@@ -66,6 +66,6 @@ export class UserValidation {
 }
 
 export type ISignupInput = z.infer<
-  typeof UserValidation.signupSchema.shape.body
+  typeof AuthValidation.signupSchema.shape.body
 >;
-export type ILoginInput = z.infer<typeof UserValidation.loginSchema.shape.body>;
+export type ILoginInput = z.infer<typeof AuthValidation.loginSchema.shape.body>;

@@ -1,21 +1,21 @@
 import express from "express";
 import { authController } from "src/controllers";
 import { validateRequest, verifyJWT } from "src/middlewares";
-import { UserValidation } from "src/validationSchema";
+import { AuthValidation } from "src/validationSchema";
 
 export const authRouter = express.Router();
 
 authRouter.post(
   "/signup",
-  validateRequest(UserValidation.signupSchema),
+  validateRequest(AuthValidation.signupSchema),
   authController.signup,
 );
 authRouter.post("/verify-email", authController.verifyEmail);
 authRouter.post(
   "/login",
-  validateRequest(UserValidation.loginSchema),
+  validateRequest(AuthValidation.loginSchema),
   authController.login,
 );
 authRouter.get("/me", verifyJWT, authController.getMe);
 authRouter.get("/refresh", authController.refresh);
-authRouter.get("/logout", verifyJWT, authController.logout);
+authRouter.post("/logout", authController.logout);
