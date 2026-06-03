@@ -14,11 +14,15 @@
 
       <p>Hello,</p>
       <p>
-        You have been invited to join <strong><%= companyName %></strong> as an <strong><%= role.replace('_', ' ').toUpperCase() %></strong>.
+        You have been invited to join
+        <strong>Artist Management System</strong> as an
+        <strong><%= role.replace('_', ' ').toUpperCase() %></strong> by <%=
+        inviterName %>.
       </p>
 
       <p>
-        Please click the button below to accept your invitation, set up your password, and access your account.
+        Please click the button below to accept your invitation, set up your
+        password, and access your account.
       </p>
 
       <div class="button-container">
@@ -26,12 +30,17 @@
       </div>
 
       <p style="font-size: 14px; color: #888888">
-        This invitation link expires in <strong><%= expiresInDays %> days</strong>. Please accept it before then.
+        This invitation link expires in
+        <strong><%= expiresInDays %> days</strong>. Please accept it before
+        then.
       </p>
 
       <p style="font-size: 14px; color: #888888">
-        If the button doesn't work, you can copy and paste this link into your browser:<br/>
-        <a href="<%= inviteUrl %>" style="color: #888888; word-break: break-all;"><%= inviteUrl %></a>
+        If the button doesn't work, you can copy and paste this link into your
+        browser:<br />
+        <a href="<%= inviteUrl %>" style="color: #888888; word-break: break-all"
+          ><%= inviteUrl %></a
+        >
       </p>
 
       <p style="font-size: 14px; color: #888888">

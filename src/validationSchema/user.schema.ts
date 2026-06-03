@@ -1,6 +1,7 @@
 import { UserRole } from "src/enums";
 import {
   emailPreprocessor,
+  optionalPreprocessor,
   requiredPreprocessor,
 } from "src/utils/validationSchemaPreprocessor";
 import { z } from "zod";
@@ -9,6 +10,20 @@ export class UserValidation {
   // Invite user schema
   static inviteUserSchema = z.object({
     body: z.object({
+      firstName: z.preprocess(
+        requiredPreprocessor,
+        z
+          .string({ message: "First name is required" })
+          .min(1, { message: "First name is required" })
+          .max(100, { message: "First name must not exceed 100 characters" }),
+      ),
+      lastName: z.preprocess(
+        optionalPreprocessor,
+        z
+          .string()
+          .max(100, { message: "Last name must not exceed 100 characters" })
+          .optional(),
+      ),
       email: z.preprocess(
         emailPreprocessor,
         z
@@ -16,7 +31,11 @@ export class UserValidation {
           .email({ message: "Invalid email format" })
           .max(255, { message: "Email must not exceed 255 characters" }),
       ),
-      role: z.enum([UserRole.ARTIST_MANAGER, UserRole.ARTIST]),
+      role: z.enum([
+        UserRole.SUPER_ADMIN,
+        UserRole.ARTIST_MANAGER,
+        UserRole.ARTIST,
+      ]),
     }),
   });
   // Verify invite schema

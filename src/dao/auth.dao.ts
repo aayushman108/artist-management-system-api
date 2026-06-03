@@ -1,4 +1,5 @@
 import { db } from "src/database/db";
+import { UserStatus } from "src/enums";
 import { ISignupInput } from "src/validationSchema";
 
 const findByEmail = async (email: string): Promise<Auth.IUser> => {
@@ -22,9 +23,9 @@ const createUser = async (
 
   const { rows } = await db.raw(
     `INSERT INTO users (id, first_name, last_name, email, password_hash, role, status) 
-       VALUES (gen_random_uuid(), ?, ?, ?, ?, 'active') 
+       VALUES (gen_random_uuid(), ?, ?, ?, ?, ?, ?) 
        RETURNING to_jsonb(users) - 'password_hash' AS user`,
-    [firstName, lastName, email, password, role],
+    [firstName, lastName, email, password, role, UserStatus.ACTIVE],
   );
   return rows[0].user;
 };

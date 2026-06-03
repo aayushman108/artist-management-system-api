@@ -28,19 +28,19 @@ appEmitter.on(
     email: string;
     role: string;
     token: string;
-    companyName: string;
+    inviterName: string;
     expiresInDays: number;
   }) => {
     try {
       const inviteUrl = `${ENV.FRONTEND_URL}/accept-invite?token=${data.token}`;
       await sendMail({
         email: data.email,
-        subject: `You have been invited to join ${data.companyName}`,
+        subject: `Invitation: ${data.role} access at Artist Management System`,
         template: "invitation.ejs",
         data: {
           role: data.role,
           inviteUrl: inviteUrl,
-          companyName: data.companyName,
+          inviterName: data.inviterName,
           expiresInDays: data.expiresInDays,
         },
       });

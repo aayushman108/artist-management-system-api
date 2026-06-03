@@ -16,6 +16,8 @@ import { db } from "src/database/db";
 const inviteUser = async (
   email: string,
   role: string,
+  firstName: string,
+  lastName: string | null,
   inviterId: string,
   inviterRole: UserRole,
 ) => {
@@ -40,22 +42,27 @@ const inviteUser = async (
   await userDao.createInvitation({
     email,
     role,
+    first_name: firstName,
+    last_name: lastName || null,
     invited_by: inviterId,
     token,
     expires_at: expiresAt,
   });
 
-  // Fetch inviter's company name for the invitation email
-  const { rows } = await db.raw("SELECT company_name FROM users WHERE id = ?", [
-    inviterId,
-  ]);
+  // Fetch inviter's name for the invitation email
+  const { rows } = await db.raw(
+    "SELECT first_name,last_name FROM users WHERE id = ?",
+    [inviterId],
+  );
   const inviter = rows[0];
 
   appEmitter.emit(EVENTS.EMAIL.INVITE, {
     email,
     role,
     token,
-    companyName: inviter?.company_name ?? "Artist Management System",
+    inviterName: [inviter?.first_name, inviter?.last_name]
+      .filter(Boolean)
+      .join(" "),
     expiresInDays,
   });
 };
@@ -81,20 +88,13 @@ const verifyInvite = async (token: string, password: string) => {
     throw new ConflictError("User already exists.");
   }
 
-  // Get inviter to determine parent_user_id and super_admin_id
+  // Get inviter to set created_by
   const { rows } = await db.raw("SELECT * FROM users WHERE id = ?", [
     invitation.invited_by,
   ]);
   const inviter = rows[0];
   if (!inviter) {
     throw new NotFoundError("Inviter not found.");
-  }
-
-  let superAdminId = null;
-  if (inviter.role === UserRole.SUPER_ADMIN) {
-    superAdminId = inviter.id;
-  } else {
-    superAdminId = inviter.super_admin_id;
   }
 
   const salt = await bcrypt.genSalt(10);
@@ -106,12 +106,26 @@ const verifyInvite = async (token: string, password: string) => {
         email: invitation.email,
         password_hash: passwordHash,
         role: invitation.role,
-        parent_user_id: inviter.id,
-        super_admin_id: superAdminId,
-        company_name: inviter.company_name,
+        first_name: invitation.first_name,
+        last_name: invitation.last_name,
+        created_by: inviter.id,
       },
       trx,
     );
+
+    if (invitation.role === UserRole.ARTIST) {
+      const stageName = invitation.email.split("@")[0];
+      const managerId =
+        inviter.role === UserRole.ARTIST_MANAGER ? inviter.id : null;
+      await userDao.createArtist(
+        {
+          userId: createdUser.id,
+          managerId,
+          stageName,
+        },
+        trx,
+      );
+    }
 
     await userDao.updateInvitationStatus(
       invitation.id,

@@ -5,11 +5,18 @@ import { asyncHandler } from "src/utils/asyncHandler";
 import { userService } from "src/services/user.service";
 
 const inviteUser = asyncHandler(async (req: Request, res: Response) => {
-  const { email, role } = req.body;
+  const { email, role, firstName, lastName } = req.body;
   const inviterId = req.userId as string;
   const inviterRole = req.userRole as UserRole;
 
-  await userService.inviteUser(email, role, inviterId, inviterRole);
+  await userService.inviteUser(
+    email,
+    role,
+    firstName,
+    lastName,
+    inviterId,
+    inviterRole,
+  );
 
   return sendSuccessResponse(res, {
     message: "Invitation sent successfully.",

@@ -4,7 +4,9 @@ declare global {
   namespace Auth {
     interface IUser {
       id: string;
-      company_name: string;
+      first_name: string;
+      last_name: string | null;
+      created_by: string | null;
       email: string;
       password_hash: string;
       role: string;
