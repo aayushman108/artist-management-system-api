@@ -114,6 +114,18 @@ const getMe = asyncHandler(async (req: Request, res: Response) => {
   });
 });
 
+const checkSignupEligibility = asyncHandler(
+  async (_req: Request, res: Response) => {
+    const result = await authService.checkSignupEligibility();
+
+    return sendSuccessResponse(res, {
+      message: result.message,
+      data: { isSignupAllowed: result.isSignupAllowed },
+      statusCode: HttpStatusCode.OK,
+    });
+  },
+);
+
 export const authController = {
   signup,
   verifyEmail,
@@ -121,4 +133,5 @@ export const authController = {
   getMe,
   refresh,
   logout,
+  checkSignupEligibility,
 };

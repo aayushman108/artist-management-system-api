@@ -5,6 +5,8 @@ import { AuthValidation } from "src/validationSchema";
 
 export const authRouter = express.Router();
 
+authRouter.get("/signup-eligibility", authController.checkSignupEligibility);
+
 authRouter.post(
   "/signup",
   validateRequest(AuthValidation.signupSchema),

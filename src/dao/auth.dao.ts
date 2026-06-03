@@ -1,5 +1,5 @@
 import { db } from "src/database/db";
-import { UserStatus } from "src/enums";
+import { UserRole, UserStatus } from "src/enums";
 import { ISignupInput } from "src/validationSchema";
 
 const findByEmail = async (email: string): Promise<Auth.IUser> => {
@@ -30,4 +30,12 @@ const createUser = async (
   return rows[0].user;
 };
 
-export const authDao = { findByEmail, createUser, findUserById };
+const hasAnySuperAdmin = async (): Promise<boolean> => {
+  const { rows } = await db.raw(
+    `SELECT EXISTS (SELECT 1 FROM users WHERE role = ?) AS has_super_admin`,
+    [UserRole.SUPER_ADMIN],
+  );
+  return rows[0].has_super_admin;
+};
+
+export const authDao = { findByEmail, createUser, findUserById, hasAnySuperAdmin };

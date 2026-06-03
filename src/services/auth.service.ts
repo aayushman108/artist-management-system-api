@@ -2,6 +2,7 @@ import {
   appEmitter,
   ConflictError,
   EVENTS,
+  ForbiddentError,
   NotFoundError,
   UnAuthorizedError,
 } from "src/utils";
@@ -34,6 +35,13 @@ async function createEmailVerificationCode(user: ISignupInput) {
 }
 
 async function signup(user: ISignupInput) {
+  const hasSuperAdmin = await authDao.hasAnySuperAdmin();
+  if (hasSuperAdmin) {
+    throw new ForbiddentError(
+      "Signup is disabled. Please contact your Super Admin to receive an invitation.",
+    );
+  }
+
   const isExistingUser = await authDao.findByEmail(user.email);
   if (!!isExistingUser) {
     throw new ConflictError("User Already Exists!!");
@@ -178,6 +186,16 @@ async function logout(refreshToken: string) {
   }
 }
 
+async function checkSignupEligibility() {
+  const hasSuperAdmin = await authDao.hasAnySuperAdmin();
+  return {
+    isSignupAllowed: !hasSuperAdmin,
+    message: hasSuperAdmin
+      ? "Signup is disabled. Please contact your Super Admin to receive an invitation."
+      : "No users found. You can sign up as the first Super Admin.",
+  };
+}
+
 export const authService = {
   signup,
   verifyEmailVerificationToken,
@@ -186,4 +204,5 @@ export const authService = {
   getMe,
   refresh,
   logout,
+  checkSignupEligibility,
 };
