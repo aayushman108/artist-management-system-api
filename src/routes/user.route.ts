@@ -19,3 +19,9 @@ userRouter.post(
   validateRequest(UserValidation.verifyInviteSchema),
   userController.verifyInvite,
 );
+
+userRouter.get(
+  "/",
+  [verifyJWT, authorize("READ_USER")],
+  userController.getUsers,
+);

@@ -10,7 +10,7 @@ import {
 import { userDao } from "src/dao/user.dao";
 import { authDao } from "src/dao";
 import { ALLOWED_USER_CREATIONS } from "src/constants/permissions.constant";
-import { UserRole, InvitationStatus } from "src/enums";
+import { UserRole, InvitationStatus, UserStatus } from "src/enums";
 import { db } from "src/database/db";
 
 const inviteUser = async (
@@ -139,4 +139,14 @@ const verifyInvite = async (token: string, password: string) => {
   return user;
 };
 
-export const userService = { inviteUser, verifyInvite };
+const getUsers = async (
+  limit: number,
+  offset: number,
+  search?: string,
+  role?: UserRole,
+  status?: UserStatus,
+) => {
+  return await userDao.getUsers(limit, offset, search, role, status);
+};
+
+export const userService = { inviteUser, verifyInvite, getUsers };

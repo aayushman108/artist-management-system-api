@@ -1,6 +1,6 @@
 import { Request, Response } from "express";
-import { HttpStatusCode, UserRole } from "src/enums";
-import { sendSuccessResponse } from "src/utils";
+import { HttpStatusCode, UserRole, UserStatus } from "src/enums";
+import { sendSuccessResponse, generatePaginationObj } from "src/utils";
 import { asyncHandler } from "src/utils/asyncHandler";
 import { userService } from "src/services/user.service";
 
@@ -37,4 +37,35 @@ const verifyInvite = asyncHandler(async (req: Request, res: Response) => {
   });
 });
 
-export const userController = { inviteUser, verifyInvite };
+const getUsers = asyncHandler(async (req: Request, res: Response) => {
+  const { page, limit, search, role, status } = req.query;
+  const pageNumber = Number(page || 1);
+  const pageLimit = Number(limit || 10);
+  const pageOffset = Number((pageNumber - 1) * pageLimit);
+
+  const usersData = await userService.getUsers(
+    pageLimit,
+    pageOffset,
+    search as string,
+    role as UserRole,
+    status as UserStatus,
+  );
+
+  const { total, data } = usersData;
+
+  const pagination = generatePaginationObj({
+    total,
+    page: pageNumber,
+    limit: pageLimit,
+  });
+
+  return sendSuccessResponse(res, {
+    data: {
+      data,
+      pagination,
+    },
+    message: "Users fetched successfully",
+  });
+});
+
+export const userController = { inviteUser, verifyInvite, getUsers };

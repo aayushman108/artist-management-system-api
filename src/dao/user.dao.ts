@@ -1,6 +1,6 @@
 import { db } from "src/database/db";
 import { Knex } from "knex";
-import { InvitationStatus, UserStatus } from "src/enums";
+import { InvitationStatus, UserStatus, UserRole } from "src/enums";
 
 export interface ICreateInvitation {
   email: string;
@@ -96,10 +96,131 @@ const createArtist = async (
   return rows[0];
 };
 
+const getUsers = async (
+  limit: number,
+  offset: number,
+  search?: string,
+  role?: string,
+  status?: string,
+) => {
+  const queryParams: any[] = [];
+  const whereClauses: string[] = [];
+
+  if (search) {
+    whereClauses.push(
+      `(u.email ILIKE ? OR u.first_name ILIKE ? OR u.last_name ILIKE ?)`,
+    );
+    queryParams.push(`%${search}%`, `%${search}%`, `%${search}%`);
+  }
+
+  if (role) {
+    whereClauses.push(`u.role = ?`);
+    queryParams.push(role);
+  }
+
+  if (status) {
+    whereClauses.push(`u.status = ?`);
+    queryParams.push(status);
+  }
+
+  const whereString =
+    whereClauses.length > 0 ? `WHERE ${whereClauses.join(" AND ")}` : "";
+
+  const countQuery = `
+    SELECT COUNT(u.id) AS count
+    FROM users u
+    ${whereString}
+  `;
+
+  const dataQuery = `
+    SELECT 
+      u.id,
+      u.email,
+      u.first_name,
+      u.last_name,
+      u.role,
+      u.status,
+      u.created_at,
+      u.created_by,
+      p.dob,
+      p.gender,
+      p.address,
+      p.phone,
+      p.avatar,
+      a.stage_name,
+      a.manager_id,
+      CONCAT_WS(' ', c.first_name, c.last_name) AS creator_name,
+      c.role AS creator_role,
+      CONCAT_WS(' ', m.first_name, m.last_name) AS artist_manager_name
+    FROM users u
+    LEFT JOIN profiles p ON u.id = p.user_id AND u.role IN (?, ?)
+    LEFT JOIN artists a ON u.id = a.user_id AND u.role = ?
+    LEFT JOIN users c ON u.created_by = c.id
+    LEFT JOIN users m ON a.manager_id = m.id
+    ${whereString}
+    ORDER BY u.created_at DESC
+    LIMIT ? OFFSET ?
+  `;
+
+  const dataParams = [
+    UserRole.SUPER_ADMIN,
+    UserRole.ARTIST_MANAGER,
+    UserRole.ARTIST,
+    ...queryParams,
+    limit,
+    offset,
+  ];
+
+  const [{ rows: countRows }, { rows: dataRows }] = await Promise.all([
+    db.raw(countQuery, queryParams),
+    db.raw(dataQuery, dataParams),
+  ]);
+
+  const formattedData = dataRows.map((row: any) => {
+    const hasProfile =
+      row.role === UserRole.SUPER_ADMIN || row.role === UserRole.ARTIST_MANAGER;
+    const isArtist = row.role === UserRole.ARTIST;
+
+    return {
+      user: {
+        id: row.id,
+        email: row.email,
+        first_name: row.first_name,
+        last_name: row.last_name,
+        role: row.role,
+        status: row.status,
+        created_at: row.created_at,
+        created_by: row.created_by,
+        creator_name: row.creator_name,
+        creator_role: row.creator_role,
+      },
+      profile: hasProfile
+        ? {
+            dob: row.dob,
+            gender: row.gender,
+            address: row.address,
+            phone: row.phone,
+            avatar: row.avatar,
+          }
+        : null,
+      artist: isArtist
+        ? {
+            stage_name: row.stage_name,
+            manager_id: row.manager_id,
+            artist_manager_name: row.artist_manager_name,
+          }
+        : null,
+    };
+  });
+
+  return { total: Number(countRows[0].count), data: formattedData };
+};
+
 export const userDao = {
   createInvitation,
   findInvitationByToken,
   updateInvitationStatus,
   createUserFromInvitation,
   createArtist,
+  getUsers,
 };
