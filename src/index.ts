@@ -5,7 +5,13 @@ import cookieParser from "cookie-parser";
 import "./config/cloudinary.config";
 import { ENV } from "./constants";
 import { db } from "./database/db";
-import { albumRouter, authRouter, musicRouter, userRouter } from "./routes";
+import {
+  albumRouter,
+  authRouter,
+  invitationRequestRouter,
+  musicRouter,
+  userRouter,
+} from "./routes";
 import { initEmailListeners } from "./listeners/email.listener";
 
 initEmailListeners();
@@ -30,6 +36,8 @@ app.use("/api/users", userRouter);
 app.use("/api/albums", albumRouter);
 
 app.use("/api/musics", musicRouter);
+
+app.use("/api/invitation-requests", invitationRequestRouter);
 
 app.use(errorHandler);
 

@@ -21,6 +21,12 @@ export enum InvitationStatus {
   EXPIRED = "expired",
 }
 
+export enum InvitationRequestStatus {
+  PENDING = "pending",
+  INVITED = "invited",
+  REJECTED = "rejected",
+}
+
 export enum DeleteType {
   HARD = "hard",
   SOFT = "soft",

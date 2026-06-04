@@ -30,6 +30,14 @@ const createInvitation = async (data: ICreateInvitation) => {
   return rows[0];
 };
 
+const findInvitationByEmail = async (email: string) => {
+  const { rows } = await db.raw(
+    `SELECT * FROM invitations WHERE email = ? AND status = ? AND expires_at >= NOW() LIMIT 1`,
+    [email, InvitationStatus.PENDING],
+  );
+  return rows[0];
+};
+
 const findInvitationByToken = async (token: string) => {
   const { rows } = await db.raw(
     `SELECT * FROM invitations WHERE token = ? AND status = ? LIMIT 1`,
@@ -261,6 +269,7 @@ const deleteArtistByUserId = async (userId: string, trx?: Knex.Transaction) => {
 
 export const userDao = {
   createInvitation,
+  findInvitationByEmail,
   findInvitationByToken,
   updateInvitationStatus,
   createUserFromInvitation,

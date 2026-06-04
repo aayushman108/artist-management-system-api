@@ -18,6 +18,9 @@ export const PERMISSIONS = {
   UPDATE_ALBUM: [UserRole.SUPER_ADMIN, UserRole.ARTIST],
   DELETE_ALBUM: [UserRole.SUPER_ADMIN, UserRole.ARTIST],
   READ_ALBUM: [UserRole.SUPER_ADMIN, UserRole.ARTIST_MANAGER, UserRole.ARTIST],
+
+  // Invitation Request Permissions
+  MANAGE_INVITATION_REQUEST: [UserRole.SUPER_ADMIN],
 };
 
 export type IPermission = keyof typeof PERMISSIONS;
