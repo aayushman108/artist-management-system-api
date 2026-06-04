@@ -68,4 +68,19 @@ const getUsers = asyncHandler(async (req: Request, res: Response) => {
   });
 });
 
-export const userController = { inviteUser, verifyInvite, getUsers };
+const deleteUser = asyncHandler(async (req: Request, res: Response) => {
+  const { id } = req.params;
+  const { type } = req.body;
+  const currentUserId = req.userId as string;
+  const currentUserRole = req.userRole as UserRole;
+
+  await userService.deleteUser(id, currentUserId, currentUserRole, type);
+
+  return sendSuccessResponse(res, {
+    message: "User deleted successfully.",
+    data: null,
+    statusCode: HttpStatusCode.OK,
+  });
+});
+
+export const userController = { inviteUser, verifyInvite, getUsers, deleteUser };

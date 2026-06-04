@@ -1,4 +1,4 @@
-import { UserRole } from "src/enums";
+import { DeleteType, UserRole } from "src/enums";
 import {
   emailPreprocessor,
   optionalPreprocessor,
@@ -55,6 +55,16 @@ export class UserValidation {
             },
           ),
       ),
+    }),
+  });
+
+  // Delete user schema
+  static deleteUserSchema = z.object({
+    params: z.object({
+      id: z.string().uuid(),
+    }),
+    body: z.object({
+      type: z.enum([DeleteType.HARD, DeleteType.SOFT]).optional(),
     }),
   });
 }

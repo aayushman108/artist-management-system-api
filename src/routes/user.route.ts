@@ -25,3 +25,13 @@ userRouter.get(
   [verifyJWT, authorize("READ_USER")],
   userController.getUsers,
 );
+
+userRouter.delete(
+  "/:id",
+  [
+    verifyJWT,
+    authorize("DELETE_USER"),
+    validateRequest(UserValidation.deleteUserSchema),
+  ],
+  userController.deleteUser,
+);

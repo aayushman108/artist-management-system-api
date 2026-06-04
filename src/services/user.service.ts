@@ -6,11 +6,12 @@ import {
   ConflictError,
   NotFoundError,
   UnAuthorizedError,
+  BadRequestError,
 } from "src/utils";
 import { userDao } from "src/dao/user.dao";
 import { authDao } from "src/dao";
 import { ALLOWED_USER_CREATIONS } from "src/constants/permissions.constant";
-import { UserRole, InvitationStatus, UserStatus } from "src/enums";
+import { UserRole, InvitationStatus, UserStatus, DeleteType } from "src/enums";
 import { db } from "src/database/db";
 
 const inviteUser = async (
@@ -149,4 +150,94 @@ const getUsers = async (
   return await userDao.getUsers(limit, offset, search, role, status);
 };
 
-export const userService = { inviteUser, verifyInvite, getUsers };
+/**
+ * Deletes a user based on their role and the type of delete requested.
+ *
+ * When no type is given, it defaults to a hard delete.
+ *
+ * **When deleting an artist:**
+ * - Super admins have the flexibility to choose
+ *   - hard delete removes the artist from the system entirely (user + all cascading data)
+ *   - soft delete removes the artist and their content, but keeps the user account as inactive.
+ * - Artist managers can only soft delete, and only for artists under their management.
+ *   - soft delete removes the artist and their content(artist + all cascading data),
+ *     but keeps the user account as inactive.
+ *   - If they attempt a hard delete, an error is thrown.
+ *
+ * **When deleting a super_admin or artist_manager:**
+ * - Only a super_admin can do this.
+ * - Hard delete works if nobody else was created by this user. If there are references,
+ *   the operation stops with a conflict error explaining why.
+ * - Soft delete simply deactivates the account by marking the user as inactive.
+ */
+const deleteUser = async (
+  targetUserId: string,
+  currentUserId: string,
+  currentUserRole: UserRole,
+  deleteType?: DeleteType,
+) => {
+  if (targetUserId === currentUserId) {
+    throw new BadRequestError("You cannot delete yourself.");
+  }
+
+  const targetUser = await authDao.findUserById(targetUserId);
+  if (!targetUser) {
+    throw new NotFoundError("User not found.");
+  }
+
+  const type = deleteType || DeleteType.HARD;
+
+  if (targetUser.role === UserRole.ARTIST) {
+    const artist = await userDao.findArtistByUserId(targetUserId);
+    if (!artist) {
+      throw new NotFoundError("Artist not found.");
+    }
+
+    if (currentUserRole === UserRole.SUPER_ADMIN) {
+      if (type === DeleteType.SOFT) {
+        await db.transaction(async (trx) => {
+          await userDao.deleteArtistByUserId(targetUserId, trx);
+          await userDao.softDeleteUser(targetUserId, trx);
+        });
+      } else {
+        await userDao.deleteUserById(targetUserId);
+      }
+    } else if (currentUserRole === UserRole.ARTIST_MANAGER) {
+      if (type === DeleteType.HARD) {
+        throw new BadRequestError(
+          "Artist managers can only soft delete artists.",
+        );
+      }
+      if (artist.manager_id !== currentUserId) {
+        throw new UnAuthorizedError(
+          "You can only delete artists managed by you.",
+        );
+      }
+      await db.transaction(async (trx) => {
+        await userDao.deleteArtistByUserId(targetUserId, trx);
+        await userDao.softDeleteUser(targetUserId, trx);
+      });
+    }
+  } else {
+    if (currentUserRole !== UserRole.SUPER_ADMIN) {
+      throw new UnAuthorizedError("Only super admin can delete this user.");
+    }
+
+    if (type === DeleteType.SOFT) {
+      await userDao.softDeleteUser(targetUserId);
+      return;
+    }
+
+    const createdByCount = await userDao.countUsersCreatedBy(targetUserId);
+
+    if (createdByCount > 0) {
+      throw new ConflictError(
+        `Cannot hard delete user. ${createdByCount} user(s) were created by this user. Use soft delete instead, or reassign this user to another super admin user first.`,
+      );
+    }
+
+    await userDao.deleteUserById(targetUserId);
+  }
+};
+
+export const userService = { inviteUser, verifyInvite, getUsers, deleteUser };

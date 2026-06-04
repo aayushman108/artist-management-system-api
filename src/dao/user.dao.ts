@@ -216,6 +216,49 @@ const getUsers = async (
   return { total: Number(countRows[0].count), data: formattedData };
 };
 
+const findArtistByUserId = async (userId: string) => {
+  const { rows } = await db.raw(
+    "SELECT * FROM artists WHERE user_id = ? LIMIT 1",
+    [userId],
+  );
+  return rows[0];
+};
+
+const countUsersCreatedBy = async (userId: string) => {
+  const { rows } = await db.raw(
+    "SELECT COUNT(*) AS count FROM users WHERE created_by = ?",
+    [userId],
+  );
+  return Number(rows[0].count);
+};
+
+const deleteUserById = async (id: string, trx?: Knex.Transaction) => {
+  const client = trx || db;
+  const { rows } = await client.raw(
+    "DELETE FROM users WHERE id = ? RETURNING id",
+    [id],
+  );
+  return rows[0];
+};
+
+const softDeleteUser = async (id: string, trx?: Knex.Transaction) => {
+  const client = trx || db;
+  const { rows } = await client.raw(
+    `UPDATE users SET status = ?, updated_at = NOW() WHERE id = ? RETURNING to_jsonb(users) - 'password_hash' AS user`,
+    [UserStatus.INACTIVE, id],
+  );
+  return rows[0]?.user;
+};
+
+const deleteArtistByUserId = async (userId: string, trx?: Knex.Transaction) => {
+  const client = trx || db;
+  const { rows } = await client.raw(
+    "DELETE FROM artists WHERE user_id = ? RETURNING id",
+    [userId],
+  );
+  return rows[0];
+};
+
 export const userDao = {
   createInvitation,
   findInvitationByToken,
@@ -223,4 +266,9 @@ export const userDao = {
   createUserFromInvitation,
   createArtist,
   getUsers,
+  findArtistByUserId,
+  countUsersCreatedBy,
+  deleteUserById,
+  softDeleteUser,
+  deleteArtistByUserId,
 };

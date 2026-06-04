@@ -20,3 +20,8 @@ export enum InvitationStatus {
   ACCEPTED = "accepted",
   EXPIRED = "expired",
 }
+
+export enum DeleteType {
+  HARD = "hard",
+  SOFT = "soft",
+}
