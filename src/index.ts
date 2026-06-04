@@ -5,7 +5,7 @@ import cookieParser from "cookie-parser";
 import "./config/cloudinary.config";
 import { ENV } from "./constants";
 import { db } from "./database/db";
-import { authRouter, userRouter } from "./routes";
+import { albumRouter, authRouter, userRouter } from "./routes";
 import { initEmailListeners } from "./listeners/email.listener";
 
 initEmailListeners();
@@ -26,6 +26,8 @@ app.use(cookieParser());
 app.use("/api/auth", authRouter);
 
 app.use("/api/users", userRouter);
+
+app.use("/api/albums", albumRouter);
 
 app.use(errorHandler);
 

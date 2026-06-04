@@ -8,22 +8,16 @@ export const PERMISSIONS = {
   READ_USER: [UserRole.SUPER_ADMIN, UserRole.ARTIST_MANAGER],
 
   // Music Permissions
-  CREATE_MUSIC: [
-    UserRole.SUPER_ADMIN,
-    UserRole.ARTIST_MANAGER,
-    UserRole.ARTIST,
-  ],
-  UPDATE_MUSIC: [
-    UserRole.SUPER_ADMIN,
-    UserRole.ARTIST_MANAGER,
-    UserRole.ARTIST,
-  ],
-  DELETE_MUSIC: [
-    UserRole.SUPER_ADMIN,
-    UserRole.ARTIST_MANAGER,
-    UserRole.ARTIST,
-  ],
+  CREATE_MUSIC: [UserRole.SUPER_ADMIN, UserRole.ARTIST],
+  UPDATE_MUSIC: [UserRole.SUPER_ADMIN, UserRole.ARTIST],
+  DELETE_MUSIC: [UserRole.SUPER_ADMIN, UserRole.ARTIST],
   READ_MUSIC: [UserRole.SUPER_ADMIN, UserRole.ARTIST_MANAGER, UserRole.ARTIST],
+
+  // Album Permissions
+  CREATE_ALBUM: [UserRole.SUPER_ADMIN, UserRole.ARTIST],
+  UPDATE_ALBUM: [UserRole.SUPER_ADMIN, UserRole.ARTIST],
+  DELETE_ALBUM: [UserRole.SUPER_ADMIN, UserRole.ARTIST],
+  READ_ALBUM: [UserRole.SUPER_ADMIN, UserRole.ARTIST_MANAGER, UserRole.ARTIST],
 };
 
 export type IPermission = keyof typeof PERMISSIONS;

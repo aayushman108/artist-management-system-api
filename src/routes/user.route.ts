@@ -14,6 +14,7 @@ userRouter.post(
   ],
   userController.inviteUser,
 );
+
 userRouter.post(
   "/verify-invite",
   validateRequest(UserValidation.verifyInviteSchema),
