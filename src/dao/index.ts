@@ -1,3 +1,4 @@
 export * from "./auth.dao";
 export * from "./user.dao";
 export * from "./album.dao";
+export * from "./music.dao";

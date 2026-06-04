@@ -11,7 +11,7 @@ async function create(
   let artistId = data.artist_id;
 
   if (userRole === UserRole.SUPER_ADMIN) {
-    if (!artistId) throw new BadRequestError("artist_id is required");
+    if (!artistId) throw new BadRequestError("artistId is required");
   } else if (userRole === UserRole.ARTIST) {
     const artist = await userDao.findArtistByUserId(userId);
     if (!artist) throw new NotFoundError("Artist profile not found");
