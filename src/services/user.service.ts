@@ -34,20 +34,28 @@ const inviteUser = async (
     throw new ConflictError("User already exists.");
   }
 
-  // Create invitation
   const token = crypto.randomBytes(32).toString("hex");
   const expiresInDays = 7;
   const expiresAt = new Date();
   expiresAt.setDate(expiresAt.getDate() + expiresInDays);
 
-  await userDao.createInvitation({
-    email,
-    role,
-    first_name: firstName,
-    last_name: lastName || null,
-    invited_by: inviterId,
-    token,
-    expires_at: expiresAt,
+  await db.transaction(async (trx) => {
+    // Expire all previous pending invitations if any
+    await userDao.expirePendingInvitationsByEmail(email, trx);
+
+    // Create invitation
+    await userDao.createInvitation(
+      {
+        email,
+        role,
+        first_name: firstName,
+        last_name: lastName || null,
+        invited_by: inviterId,
+        token,
+        expires_at: expiresAt,
+      },
+      trx,
+    );
   });
 
   // Fetch inviter's name for the invitation email
@@ -71,10 +79,18 @@ const inviteUser = async (
 const verifyInvite = async (token: string, password: string) => {
   const invitation = await userDao.findInvitationByToken(token);
   if (!invitation) {
-    throw new NotFoundError("Invalid or expired invitation token.");
+    throw new NotFoundError("Invalid invitation token.");
   }
 
-  // Check if invitation is expired
+  if (invitation.status === InvitationStatus.EXPIRED) {
+    throw new UnAuthorizedError("Invitation has expired.");
+  }
+
+  if (invitation.status === InvitationStatus.ACCEPTED) {
+    throw new ConflictError("Invitation has already been accepted.");
+  }
+
+  // Check if invitation is expired by date
   if (new Date(invitation.expires_at) < new Date()) {
     await userDao.updateInvitationStatus(
       invitation.id,

@@ -12,8 +12,12 @@ export interface ICreateInvitation {
   expires_at: Date;
 }
 
-const createInvitation = async (data: ICreateInvitation) => {
-  const { rows } = await db.raw(
+const createInvitation = async (
+  data: ICreateInvitation,
+  trx?: Knex.Transaction,
+) => {
+  const client = trx || db;
+  const { rows } = await client.raw(
     `INSERT INTO invitations (email, role, first_name, last_name, invited_by, token, expires_at)
      VALUES (?, ?, ?, ?, ?, ?, ?)
      RETURNING *`,
@@ -40,8 +44,8 @@ const findInvitationByEmail = async (email: string) => {
 
 const findInvitationByToken = async (token: string) => {
   const { rows } = await db.raw(
-    `SELECT * FROM invitations WHERE token = ? AND status = ? LIMIT 1`,
-    [token, InvitationStatus.PENDING],
+    `SELECT * FROM invitations WHERE token = ? LIMIT 1`,
+    [token],
   );
   return rows[0];
 };
@@ -52,11 +56,25 @@ const updateInvitationStatus = async (
   trx?: Knex.Transaction,
 ) => {
   const client = trx || db;
+  const setAcceptedAt =
+    status === InvitationStatus.ACCEPTED ? ", accepted_at = NOW()" : "";
   const { rows } = await client.raw(
-    `UPDATE invitations SET status = ?, accepted_at = NOW(), updated_at = NOW() WHERE id = ? RETURNING *`,
+    `UPDATE invitations SET status = ?${setAcceptedAt}, updated_at = NOW() WHERE id = ? RETURNING *`,
     [status, id],
   );
   return rows[0];
+};
+
+const expirePendingInvitationsByEmail = async (
+  email: string,
+  trx?: Knex.Transaction,
+) => {
+  const client = trx || db;
+  const { rows } = await client.raw(
+    `UPDATE invitations SET status = ?, updated_at = NOW() WHERE email = ? AND status = ? RETURNING *`,
+    [InvitationStatus.EXPIRED, email, InvitationStatus.PENDING],
+  );
+  return rows;
 };
 
 const createUserFromInvitation = async (
@@ -272,6 +290,7 @@ export const userDao = {
   findInvitationByEmail,
   findInvitationByToken,
   updateInvitationStatus,
+  expirePendingInvitationsByEmail,
   createUserFromInvitation,
   createArtist,
   getUsers,
