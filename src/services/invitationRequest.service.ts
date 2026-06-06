@@ -44,6 +44,7 @@ async function getInvitations(
   status?: InvitationRequestStatus,
   role?: UserRole,
   search?: string,
+  invitedBy?: string,
 ) {
   const pageOffset = (page - 1) * limit;
 
@@ -53,6 +54,7 @@ async function getInvitations(
     search,
     status,
     role,
+    invitedBy,
   });
 }
 

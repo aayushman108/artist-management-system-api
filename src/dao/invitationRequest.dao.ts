@@ -14,6 +14,7 @@ interface IFindRequestsParams {
   status?: InvitationRequestStatus;
   role?: UserRole;
   search?: string;
+  invitedBy?: string;
 }
 
 const createRequest = async (data: ICreateInvitationRequest) => {
@@ -99,9 +100,15 @@ const findInvitations = async ({
   status,
   role,
   search,
+  invitedBy,
 }: IFindRequestsParams) => {
   const conditions: string[] = [];
   const params: any[] = [];
+
+  if (invitedBy) {
+    conditions.push("i.invited_by = ?");
+    params.push(invitedBy);
+  }
 
   if (status) {
     conditions.push("i.status = ?");

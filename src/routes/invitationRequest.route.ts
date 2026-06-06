@@ -19,7 +19,7 @@ invitationRequestRouter.get(
 
 invitationRequestRouter.get(
   "/invitations",
-  [verifyJWT, authorize("MANAGE_INVITATION_REQUEST")],
+  [verifyJWT, authorize("CREATE_USER")],
   invitationRequestController.getInvitations,
 );
 

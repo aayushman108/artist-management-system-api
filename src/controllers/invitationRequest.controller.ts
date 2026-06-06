@@ -49,6 +49,10 @@ const getInvitations = asyncHandler(async (req: Request, res: Response) => {
   const { page, limit, status, role, search } = req.query;
   const pageNumber = Number(page || 1);
   const pageLimit = Number(limit || 10);
+  const userRole = req.userRole as string;
+  const userId = req.userId as string;
+
+  const invitedBy = userRole === UserRole.SUPER_ADMIN ? undefined : userId;
 
   const result = await invitationRequestService.getInvitations(
     pageNumber,
@@ -56,6 +60,7 @@ const getInvitations = asyncHandler(async (req: Request, res: Response) => {
     status as InvitationRequestStatus,
     role as UserRole,
     search as string,
+    invitedBy,
   );
 
   const pagination = generatePaginationObj({
