@@ -7,6 +7,7 @@ import { ENV } from "./constants";
 import { db } from "./database/db";
 import {
   albumRouter,
+  artistRouter,
   authRouter,
   invitationRequestRouter,
   musicRouter,
@@ -36,6 +37,8 @@ app.use("/api/users", userRouter);
 app.use("/api/albums", albumRouter);
 
 app.use("/api/musics", musicRouter);
+
+app.use("/api/artists", artistRouter);
 
 app.use("/api/invitation-requests", invitationRequestRouter);
 

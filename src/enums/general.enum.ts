@@ -27,6 +27,12 @@ export enum InvitationRequestStatus {
   REJECTED = "rejected",
 }
 
+export enum Gender {
+  MALE = "male",
+  FEMALE = "female",
+  OTHER = "other",
+}
+
 export enum DeleteType {
   HARD = "hard",
   SOFT = "soft",

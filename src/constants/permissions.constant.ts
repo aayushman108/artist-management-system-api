@@ -19,6 +19,11 @@ export const PERMISSIONS = {
   DELETE_ALBUM: [UserRole.SUPER_ADMIN, UserRole.ARTIST],
   READ_ALBUM: [UserRole.SUPER_ADMIN, UserRole.ARTIST_MANAGER, UserRole.ARTIST],
 
+  // Artist Permissions
+  READ_ARTIST: [UserRole.SUPER_ADMIN, UserRole.ARTIST_MANAGER],
+  UPDATE_ARTIST: [UserRole.SUPER_ADMIN, UserRole.ARTIST_MANAGER],
+  DELETE_ARTIST: [UserRole.SUPER_ADMIN, UserRole.ARTIST_MANAGER],
+
   // Invitation Request Permissions
   MANAGE_INVITATION_REQUEST: [UserRole.SUPER_ADMIN],
 };

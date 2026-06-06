@@ -1,0 +1,119 @@
+import { Request, Response } from "express";
+import { HttpStatusCode, UserRole, DeleteType } from "src/enums";
+import { artistService } from "src/services/artist.service";
+import {
+  asyncHandler,
+  generatePaginationObj,
+  sendSuccessResponse,
+} from "src/utils";
+import { IUpdateArtistInput } from "src/validationSchema";
+
+const getAllArtists = asyncHandler(async (req: Request, res: Response) => {
+  const { page, limit, search } = req.query;
+  const pageNumber = Number(page || 1);
+  const pageLimit = Number(limit || 10);
+  const userId = req.userId as string;
+  const userRole = req.userRole as UserRole;
+
+  const artistsData = await artistService.getAll(
+    pageNumber,
+    pageLimit,
+    search as string,
+    userId,
+    userRole,
+  );
+
+  const { total, data } = artistsData;
+  const pagination = generatePaginationObj({
+    total,
+    page: pageNumber,
+    limit: pageLimit,
+  });
+
+  return sendSuccessResponse(res, {
+    message: "Artists fetched successfully",
+    data: { data, pagination },
+  });
+});
+
+const getArtistsByManagerId = asyncHandler(
+  async (req: Request, res: Response) => {
+    const { managerId } = req.params;
+    const { page, limit, search } = req.query;
+    const pageNumber = Number(page || 1);
+    const pageLimit = Number(limit || 10);
+    const userRole = req.userRole as UserRole;
+
+    const artistsData = await artistService.getByManagerId(
+      managerId,
+      pageNumber,
+      pageLimit,
+      search as string,
+      userRole,
+    );
+
+    const { total, data } = artistsData;
+
+    const pagination = generatePaginationObj({
+      total,
+      page: pageNumber,
+      limit: pageLimit,
+    });
+
+    return sendSuccessResponse(res, {
+      message: "Artists fetched successfully",
+      data: { data, pagination },
+    });
+  },
+);
+
+const getArtistByArtistId = asyncHandler(
+  async (req: Request, res: Response) => {
+    const { id } = req.params;
+    const userId = req.userId as string;
+    const userRole = req.userRole as UserRole;
+
+    const artist = await artistService.getById(id, userId, userRole);
+
+    return sendSuccessResponse(res, {
+      message: "Artist fetched successfully",
+      data: artist,
+    });
+  },
+);
+
+const updateArtist = asyncHandler(async (req: Request, res: Response) => {
+  const { id } = req.params;
+  const data = req.body as IUpdateArtistInput;
+  const userId = req.userId as string;
+  const userRole = req.userRole as UserRole;
+
+  const artist = await artistService.update(id, data, userId, userRole);
+
+  return sendSuccessResponse(res, {
+    message: "Artist updated successfully",
+    data: artist,
+  });
+});
+
+const deleteArtist = asyncHandler(async (req: Request, res: Response) => {
+  const { id } = req.params;
+  const { type } = req.body;
+  const userId = req.userId as string;
+  const userRole = req.userRole as UserRole;
+
+  await artistService.delete(id, userId, userRole, type as DeleteType);
+
+  return sendSuccessResponse(res, {
+    message: "Artist deleted successfully",
+    data: null,
+  });
+});
+
+export const artistController = {
+  getAllArtists,
+  getArtistsByManagerId,
+  getArtistByArtistId,
+  updateArtist,
+  deleteArtist,
+};
