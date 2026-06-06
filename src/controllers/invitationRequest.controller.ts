@@ -45,6 +45,31 @@ const getRequests = asyncHandler(async (req: Request, res: Response) => {
   });
 });
 
+const getInvitations = asyncHandler(async (req: Request, res: Response) => {
+  const { page, limit, status, role, search } = req.query;
+  const pageNumber = Number(page || 1);
+  const pageLimit = Number(limit || 10);
+
+  const result = await invitationRequestService.getInvitations(
+    pageNumber,
+    pageLimit,
+    status as InvitationRequestStatus,
+    role as UserRole,
+    search as string,
+  );
+
+  const pagination = generatePaginationObj({
+    total: result.total,
+    page: pageNumber,
+    limit: pageLimit,
+  });
+
+  return sendSuccessResponse(res, {
+    message: "Invitations fetched successfully.",
+    data: { data: result.data, pagination },
+  });
+});
+
 const sendInvitation = asyncHandler(async (req: Request, res: Response) => {
   const { id } = req.params;
   const adminId = req.userId as string;
@@ -91,6 +116,7 @@ const deleteRequest = asyncHandler(async (req: Request, res: Response) => {
 export const invitationRequestController = {
   createRequest,
   getRequests,
+  getInvitations,
   sendInvitation,
   updateRequestStatus,
   deleteRequest,

@@ -93,6 +93,53 @@ const updateRequestStatus = async (id: string, status: string) => {
   return rows[0];
 };
 
+const findInvitations = async ({
+  pageLimit,
+  pageOffset,
+  status,
+  role,
+  search,
+}: IFindRequestsParams) => {
+  const conditions: string[] = [];
+  const params: any[] = [];
+
+  if (status) {
+    conditions.push("i.status = ?");
+    params.push(status);
+  }
+
+  if (role) {
+    conditions.push("i.role = ?");
+    params.push(role);
+  }
+
+  if (search) {
+    conditions.push(
+      `(i.email ILIKE ? OR i.first_name ILIKE ? OR i.last_name ILIKE ?)`,
+    );
+    params.push(`%${search}%`, `%${search}%`, `%${search}%`);
+  }
+
+  const where = conditions.length ? ` WHERE ${conditions.join(" AND ")}` : "";
+
+  const { rows: countRows } = await db.raw(
+    `SELECT COUNT(*) AS count FROM invitations i${where}`,
+    params,
+  );
+  const total = Number(countRows[0].count);
+
+  const { rows: data } = await db.raw(
+    `SELECT i.id, i.email, i.role, CONCAT_WS(' ', i.first_name, i.last_name) AS name, i.status, i.expires_at, i.accepted_at, i.created_at, i.updated_at, CONCAT_WS(' ', u.first_name, u.last_name) AS invited_by
+     FROM invitations i
+     LEFT JOIN users u ON u.id = i.invited_by
+     ${where}
+     ORDER BY i.created_at DESC LIMIT ? OFFSET ?`,
+    [...params, pageLimit, pageOffset],
+  );
+
+  return { total, data };
+};
+
 const deleteRequest = async (id: string) => {
   const { rows } = await db.raw(
     "DELETE FROM invitation_requests WHERE id = ? RETURNING id",
@@ -106,6 +153,7 @@ export const invitationRequestDao = {
   findRequestById,
   findPendingRequestByEmail,
   findRequests,
+  findInvitations,
   updateRequestStatus,
   deleteRequest,
 };

@@ -17,6 +17,12 @@ invitationRequestRouter.get(
   invitationRequestController.getRequests,
 );
 
+invitationRequestRouter.get(
+  "/invitations",
+  [verifyJWT, authorize("MANAGE_INVITATION_REQUEST")],
+  invitationRequestController.getInvitations,
+);
+
 invitationRequestRouter.patch(
   "/:id/invite",
   [

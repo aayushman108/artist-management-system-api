@@ -38,6 +38,24 @@ async function create(data: ICreateInvitationRequestInput) {
   return request;
 }
 
+async function getInvitations(
+  page: number,
+  limit: number,
+  status?: InvitationRequestStatus,
+  role?: UserRole,
+  search?: string,
+) {
+  const pageOffset = (page - 1) * limit;
+
+  return await invitationRequestDao.findInvitations({
+    pageLimit: limit,
+    pageOffset,
+    search,
+    status,
+    role,
+  });
+}
+
 async function getAll(
   page: number,
   limit: number,
@@ -142,6 +160,7 @@ async function remove(id: string) {
 export const invitationRequestService = {
   create,
   getAll,
+  getInvitations,
   invite,
   updateStatus,
   remove,
