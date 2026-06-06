@@ -1,5 +1,5 @@
 import { Request, Response } from "express";
-import { HttpStatusCode, InvitationRequestStatus } from "src/enums";
+import { HttpStatusCode, InvitationRequestStatus, UserRole } from "src/enums";
 import {
   asyncHandler,
   sendSuccessResponse,
@@ -21,14 +21,16 @@ const createRequest = asyncHandler(async (req: Request, res: Response) => {
 });
 
 const getRequests = asyncHandler(async (req: Request, res: Response) => {
-  const { page, limit, status } = req.query;
+  const { page, limit, status, role, search } = req.query;
   const pageNumber = Number(page || 1);
   const pageLimit = Number(limit || 10);
 
   const result = await invitationRequestService.getAll(
     pageNumber,
     pageLimit,
-    status as string,
+    status as InvitationRequestStatus,
+    role as UserRole,
+    search as string,
   );
 
   const pagination = generatePaginationObj({
@@ -43,7 +45,7 @@ const getRequests = asyncHandler(async (req: Request, res: Response) => {
   });
 });
 
-const inviteRequest = asyncHandler(async (req: Request, res: Response) => {
+const sendInvitation = asyncHandler(async (req: Request, res: Response) => {
   const { id } = req.params;
   const adminId = req.userId as string;
 
@@ -56,21 +58,23 @@ const inviteRequest = asyncHandler(async (req: Request, res: Response) => {
   });
 });
 
-const updateRequestStatus = asyncHandler(async (req: Request, res: Response) => {
-  const { id } = req.params;
-  const { status } = req.body;
+const updateRequestStatus = asyncHandler(
+  async (req: Request, res: Response) => {
+    const { id } = req.params;
+    const { status } = req.body;
 
-  const result = await invitationRequestService.updateStatus(
-    id,
-    status as InvitationRequestStatus,
-  );
+    const result = await invitationRequestService.updateStatus(
+      id,
+      status as InvitationRequestStatus,
+    );
 
-  return sendSuccessResponse(res, {
-    message: `Invitation request status updated to "${status}".`,
-    data: result,
-    statusCode: HttpStatusCode.OK,
-  });
-});
+    return sendSuccessResponse(res, {
+      message: `Invitation request status updated to "${status}".`,
+      data: result,
+      statusCode: HttpStatusCode.OK,
+    });
+  },
+);
 
 const deleteRequest = asyncHandler(async (req: Request, res: Response) => {
   const { id } = req.params;
@@ -87,7 +91,7 @@ const deleteRequest = asyncHandler(async (req: Request, res: Response) => {
 export const invitationRequestController = {
   createRequest,
   getRequests,
-  inviteRequest,
+  sendInvitation,
   updateRequestStatus,
   deleteRequest,
 };

@@ -31,7 +31,11 @@ export class InvitationRequestValidation {
             .email({ message: "Invalid email format" })
             .max(255, { message: "Email must not exceed 255 characters" }),
         ),
-        role: z.enum([UserRole.ARTIST_MANAGER, UserRole.ARTIST]),
+        role: z.enum([
+          UserRole.SUPER_ADMIN,
+          UserRole.ARTIST_MANAGER,
+          UserRole.ARTIST,
+        ]),
       })
       .transform(({ firstName, lastName, email, role }) => ({
         first_name: firstName,
@@ -41,7 +45,7 @@ export class InvitationRequestValidation {
       })),
   });
 
-  static respondSchema = z.object({
+  static sendInvitationSchema = z.object({
     params: z.object({
       id: z.string().uuid({ message: "Invalid request ID" }),
     }),

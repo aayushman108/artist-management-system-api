@@ -22,9 +22,9 @@ invitationRequestRouter.patch(
   [
     verifyJWT,
     authorize("MANAGE_INVITATION_REQUEST"),
-    validateRequest(InvitationRequestValidation.respondSchema),
+    validateRequest(InvitationRequestValidation.sendInvitationSchema),
   ],
-  invitationRequestController.inviteRequest,
+  invitationRequestController.sendInvitation,
 );
 
 invitationRequestRouter.patch(

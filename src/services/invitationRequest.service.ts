@@ -10,7 +10,7 @@ import {
   EVENTS,
 } from "src/utils";
 import { ICreateInvitationRequestInput } from "src/validationSchema";
-import { InvitationRequestStatus } from "src/enums";
+import { InvitationRequestStatus, UserRole } from "src/enums";
 import { db } from "src/database/db";
 
 async function create(data: ICreateInvitationRequestInput) {
@@ -21,7 +21,9 @@ async function create(data: ICreateInvitationRequestInput) {
 
   const existingInvitation = await userDao.findInvitationByEmail(data.email);
   if (existingInvitation) {
-    throw new ConflictError("An invitation for this email already exists.");
+    throw new ConflictError(
+      "An invitation has already been sent to this email. Please check your inbox or spam folder.",
+    );
   }
 
   const pendingRequest = await invitationRequestDao.findPendingRequestByEmail(
@@ -36,13 +38,21 @@ async function create(data: ICreateInvitationRequestInput) {
   return request;
 }
 
-async function getAll(page: number, limit: number, status?: string) {
+async function getAll(
+  page: number,
+  limit: number,
+  status?: InvitationRequestStatus,
+  role?: UserRole,
+  search?: string,
+) {
   const pageOffset = (page - 1) * limit;
 
   return await invitationRequestDao.findRequests({
     pageLimit: limit,
     pageOffset,
+    search,
     status,
+    role,
   });
 }
 
@@ -112,9 +122,7 @@ async function updateStatus(id: string, status: InvitationRequestStatus) {
   }
 
   if (request.status === status) {
-    throw new BadRequestError(
-      `Request is already in "${status}" status.`,
-    );
+    throw new BadRequestError(`Request is already in "${status}" status.`);
   }
 
   const updated = await invitationRequestDao.updateRequestStatus(id, status);

@@ -1,4 +1,5 @@
 import { db } from "src/database/db";
+import { InvitationRequestStatus, UserRole } from "src/enums";
 
 interface ICreateInvitationRequest {
   first_name: string;
@@ -10,7 +11,9 @@ interface ICreateInvitationRequest {
 interface IFindRequestsParams {
   pageLimit: number;
   pageOffset: number;
-  status?: string;
+  status?: InvitationRequestStatus;
+  role?: UserRole;
+  search?: string;
 }
 
 const createRequest = async (data: ICreateInvitationRequest) => {
@@ -43,6 +46,8 @@ const findRequests = async ({
   pageLimit,
   pageOffset,
   status,
+  role,
+  search,
 }: IFindRequestsParams) => {
   const conditions: string[] = [];
   const params: any[] = [];
@@ -50,6 +55,18 @@ const findRequests = async ({
   if (status) {
     conditions.push("status = ?");
     params.push(status);
+  }
+
+  if (role) {
+    conditions.push("role = ?");
+    params.push(role);
+  }
+
+  if (search) {
+    conditions.push(
+      `(email ILIKE ? OR first_name ILIKE ? OR last_name ILIKE ?)`,
+    );
+    params.push(`%${search}%`, `%${search}%`, `%${search}%`);
   }
 
   const where = conditions.length ? ` WHERE ${conditions.join(" AND ")}` : "";
