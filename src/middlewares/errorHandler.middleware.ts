@@ -1,10 +1,11 @@
-import { ErrorRequestHandler, NextFunction, Request, Response } from "express";
+import { NextFunction, Request, Response } from "express";
+import { MulterError } from "multer";
 import { HttpStatusCode } from "../enums/statusCode.enum";
 import { BaseError } from "../utils/baseError.util";
 import { JsonWebTokenError } from "jsonwebtoken";
 
 export function errorHandler(
-  error: ErrorRequestHandler,
+  error: any,
   req: Request,
   res: Response,
   next: NextFunction,
@@ -17,8 +18,14 @@ export function errorHandler(
       message: error.message,
       data: null,
     });
+  } else if (error instanceof MulterError || error?.code === "LIMIT_FILE_SIZE") {
+    return res.status(HttpStatusCode.BAD_REQUEST).json({
+      success: false,
+      message: error.message || "File upload error",
+      data: null,
+    });
   } else {
-    console.log(error, "Error from error handler");
+    console.error(error, "Error from error handler");
     return res.status(HttpStatusCode.INTERNAL_SERVER_ERROR).json({
       success: false,
       message: "Internal Server Error",
