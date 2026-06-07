@@ -78,9 +78,65 @@ const getMusics = asyncHandler(async (req: Request, res: Response) => {
   });
 });
 
+const getMusicsByArtistId = asyncHandler(async (req: Request, res: Response) => {
+  const { artistId } = req.params;
+  const { page, limit, search } = req.query;
+
+  const pageNumber = Number(page || 1);
+  const pageLimit = Number(limit || 10);
+
+  const { total, data } = await musicService.getMusicsByArtistId({
+    page: pageNumber,
+    limit: pageLimit,
+    search: search as string,
+    artistId: artistId as string,
+  });
+
+  const pagination = generatePaginationObj({
+    total,
+    page: pageNumber,
+    limit: pageLimit,
+  });
+
+  return sendSuccessResponse(res, {
+    message: "Musics fetched successfully",
+    data: { data, pagination },
+    statusCode: HttpStatusCode.OK,
+  });
+});
+
+const getMyMusics = asyncHandler(async (req: Request, res: Response) => {
+  const { page, limit, search } = req.query;
+  const userId = req.userId as string;
+
+  const pageNumber = Number(page || 1);
+  const pageLimit = Number(limit || 10);
+
+  const { total, data } = await musicService.getMyMusics({
+    page: pageNumber,
+    limit: pageLimit,
+    search: search as string,
+    userId,
+  });
+
+  const pagination = generatePaginationObj({
+    total,
+    page: pageNumber,
+    limit: pageLimit,
+  });
+
+  return sendSuccessResponse(res, {
+    message: "My musics fetched successfully",
+    data: { data, pagination },
+    statusCode: HttpStatusCode.OK,
+  });
+});
+
 export const musicController = {
   createMusic,
   updateMusic,
   deleteMusic,
   getMusics,
+  getMusicsByArtistId,
+  getMyMusics,
 };

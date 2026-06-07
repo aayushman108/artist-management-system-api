@@ -77,4 +77,44 @@ async function getAll(query: {
   return result;
 }
 
-export const musicService = { create, update, delete: deleteMusic, getAll };
+async function getMusicsByArtistId(query: {
+  page: number;
+  limit: number;
+  search?: string;
+  artistId: string;
+}) {
+  const { page, limit, search, artistId } = query;
+  const pageOffset = (page - 1) * limit;
+
+  const result = await musicDao.findMusics({
+    pageLimit: limit,
+    pageOffset,
+    search,
+    artistId,
+  });
+  return result;
+}
+
+async function getMyMusics(query: {
+  page: number;
+  limit: number;
+  search?: string;
+  userId: string;
+}) {
+  const { page, limit, search, userId } = query;
+
+  const artist = await userDao.findArtistByUserId(userId);
+  if (!artist) throw new NotFoundError("Artist profile not found");
+
+  const pageOffset = (page - 1) * limit;
+
+  const result = await musicDao.findMusics({
+    pageLimit: limit,
+    pageOffset,
+    search,
+    artistId: artist.id,
+  });
+  return result;
+}
+
+export const musicService = { create, update, delete: deleteMusic, getAll, getMusicsByArtistId, getMyMusics };

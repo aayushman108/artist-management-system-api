@@ -7,10 +7,12 @@ export const musicRouter = express.Router();
 
 musicRouter.use(verifyJWT);
 
-musicRouter.get("/", [authorize("READ_MUSIC")], musicController.getMusics);
+musicRouter.get("/", [authorize("READ_MY_MUSIC")], musicController.getMyMusics);
 
 musicRouter.post("/", [authorize("CREATE_MUSIC"), validateRequest(MusicValidation.createMusicSchema)], musicController.createMusic);
 
 musicRouter.put("/:id", [authorize("UPDATE_MUSIC"), validateRequest(MusicValidation.updateMusicSchema)], musicController.updateMusic);
+
+musicRouter.get("/artist/:artistId", [authorize("READ_MUSIC_BY_ARTIST")], musicController.getMusicsByArtistId);
 
 musicRouter.delete("/:id", [authorize("DELETE_MUSIC"), validateRequest(MusicValidation.deleteMusicSchema)], musicController.deleteMusic);

@@ -12,6 +12,8 @@ export const PERMISSIONS = {
   UPDATE_MUSIC: [UserRole.SUPER_ADMIN, UserRole.ARTIST],
   DELETE_MUSIC: [UserRole.SUPER_ADMIN, UserRole.ARTIST],
   READ_MUSIC: [UserRole.SUPER_ADMIN, UserRole.ARTIST_MANAGER, UserRole.ARTIST],
+  READ_MUSIC_BY_ARTIST: [UserRole.SUPER_ADMIN, UserRole.ARTIST_MANAGER],
+  READ_MY_MUSIC: [UserRole.ARTIST],
 
   // Album Permissions
   CREATE_ALBUM: [UserRole.SUPER_ADMIN, UserRole.ARTIST],
