@@ -10,12 +10,15 @@ import {
   artistRouter,
   authRouter,
   invitationRequestRouter,
+  jobRouter,
   musicRouter,
   userRouter,
 } from "./routes";
 import { initEmailListeners } from "./listeners/email.listener";
+import { initJobWorker } from "./workers/job.worker";
 
 initEmailListeners();
+initJobWorker();
 
 const app = express();
 
@@ -41,6 +44,8 @@ app.use("/api/musics", musicRouter);
 app.use("/api/artists", artistRouter);
 
 app.use("/api/invitation-requests", invitationRequestRouter);
+
+app.use("/api/jobs", jobRouter);
 
 app.use(errorHandler);
 

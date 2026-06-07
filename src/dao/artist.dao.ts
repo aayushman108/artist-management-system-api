@@ -133,6 +133,101 @@ const updateArtist = async (id: string, data: Record<string, any>) => {
   return rows[0];
 };
 
+interface ICreateUserForImport {
+  email: string;
+  first_name: string;
+  last_name: string | null;
+  password_hash: string;
+  role: string;
+  status: string;
+  created_by: string;
+}
+
+interface ICreateArtistForImport {
+  user_id: string;
+  manager_id: string;
+  stage_name: string;
+  dob: string | null;
+  gender: string | null;
+  address: string | null;
+  first_release_year: number | null;
+}
+
+const createUserForImport = async (
+  data: ICreateUserForImport,
+  trx: Knex.Transaction,
+) => {
+  const { rows } = await trx.raw(
+    `INSERT INTO users (email, first_name, last_name, password_hash, role, status, created_by, created_at, updated_at)
+     VALUES (?, ?, ?, ?, ?, ?, ?, NOW(), NOW())
+     ON CONFLICT (email) DO NOTHING RETURNING *`,
+    [
+      data.email,
+      data.first_name,
+      data.last_name,
+      data.password_hash,
+      data.role,
+      data.status,
+      data.created_by,
+    ],
+  );
+  return rows[0];
+};
+
+const createArtistForImport = async (
+  data: ICreateArtistForImport,
+  trx: Knex.Transaction,
+) => {
+  const { rows } = await trx.raw(
+    `INSERT INTO artists (user_id, manager_id, stage_name, dob, gender, address, first_release_year, created_at, updated_at)
+     VALUES (?, ?, ?, ?, ?, ?, ?, NOW(), NOW()) RETURNING *`,
+    [
+      data.user_id,
+      data.manager_id,
+      data.stage_name,
+      data.dob,
+      data.gender,
+      data.address,
+      data.first_release_year,
+    ],
+  );
+  return rows[0];
+};
+
+const findAllArtistsForExport = async (managerId?: string) => {
+  const conditions: string[] = [];
+  const params: any[] = [];
+
+  if (managerId) {
+    conditions.push("a.manager_id = ?");
+    params.push(managerId);
+  }
+
+  const where = conditions.length ? ` WHERE ${conditions.join(" AND ")}` : "";
+
+  const { rows } = await db.raw(
+    `SELECT
+      u.email,
+      u.first_name,
+      u.last_name,
+      a.stage_name,
+      a.dob,
+      a.gender,
+      a.address,
+      a.first_release_year,
+      u.status AS user_status,
+      a.created_at,
+      a.updated_at
+    FROM artists a
+    JOIN users u ON a.user_id = u.id
+    ${where}
+    ORDER BY a.created_at DESC`,
+    params,
+  );
+
+  return rows;
+};
+
 const deleteArtistById = async (id: string, trx?: Knex.Transaction) => {
   const client = trx || db;
   const { rows } = await client.raw(
@@ -174,4 +269,7 @@ export const artistDao = {
   deleteArtistById,
   softDeleteUserByArtistId,
   deleteUserByArtistId,
+  createUserForImport,
+  createArtistForImport,
+  findAllArtistsForExport,
 };

@@ -5,3 +5,4 @@ export * from "./album.service";
 export * from "./music.service";
 export * from "./invitationRequest.service";
 export * from "./artist.service";
+export * from "./job.service";

@@ -2,6 +2,7 @@ import { Request, Response } from "express";
 import { HttpStatusCode, UserRole, DeleteType } from "src/enums";
 import { artistService } from "src/services/artist.service";
 import {
+  BadRequestError,
   asyncHandler,
   generatePaginationObj,
   sendSuccessResponse,
@@ -110,10 +111,44 @@ const deleteArtist = asyncHandler(async (req: Request, res: Response) => {
   });
 });
 
+const importCsv = asyncHandler(async (req: Request, res: Response) => {
+  const userId = req.userId as string;
+  const userRole = req.userRole as UserRole;
+
+  if (!req.file) {
+    throw new BadRequestError("CSV file is required");
+  }
+
+  const csvContent = req.file.buffer.toString("utf-8");
+  const { jobId } = await artistService.importCsv(csvContent, userId, userRole);
+
+  return sendSuccessResponse(res, {
+    message: "Import started",
+    data: { jobId },
+    statusCode: HttpStatusCode.ACCEPTED,
+  });
+});
+
+const exportCsv = asyncHandler(async (req: Request, res: Response) => {
+  const userId = req.userId as string;
+  const userRole = req.userRole as UserRole;
+
+  const csvData = await artistService.exportCsv(userId, userRole);
+
+  res.setHeader("Content-Type", "text/csv");
+  res.setHeader(
+    "Content-Disposition",
+    `attachment; filename="artists-${new Date().toISOString().split("T")[0]}.csv"`,
+  );
+  return res.send(csvData);
+});
+
 export const artistController = {
   getAllArtists,
   getArtistsByManagerId,
   getArtistByArtistId,
   updateArtist,
   deleteArtist,
+  importCsv,
+  exportCsv,
 };

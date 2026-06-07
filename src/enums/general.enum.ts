@@ -5,9 +5,9 @@ export enum UserRole {
 }
 
 export enum UserStatus {
-  INVITED = "invited",
   ACTIVE = "active",
   INACTIVE = "inactive",
+  MIGRATED = "migrated",
 }
 
 export enum InvitationRole {
@@ -36,4 +36,15 @@ export enum Gender {
 export enum DeleteType {
   HARD = "hard",
   SOFT = "soft",
+}
+
+export enum JobType {
+  ARTIST_IMPORT = "artist_import",
+}
+
+export enum JobStatus {
+  PENDING = "pending",
+  PROCESSING = "processing",
+  COMPLETED = "completed",
+  FAILED = "failed",
 }

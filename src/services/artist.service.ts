@@ -1,8 +1,19 @@
-import { UserRole, DeleteType } from "src/enums";
-import { artistDao } from "src/dao/artist.dao";
+import { UserRole, DeleteType, JobType } from "src/enums";
+import { artistDao, jobDao } from "src/dao";
 import { db } from "src/database/db";
-import { BadRequestError, ForbiddentError, NotFoundError } from "src/utils";
-import { IUpdateArtistInput } from "src/validationSchema";
+import {
+  BadRequestError,
+  ConflictError,
+  ForbiddentError,
+  NotFoundError,
+  csvUtil,
+} from "src/utils";
+import {
+  ArtistValidation,
+  IUpdateArtistInput,
+  IArtistCsvRow,
+} from "src/validationSchema";
+import { CsvParseError } from "src/utils/csv.util";
 
 const getAll = async (
   page: number,
@@ -101,10 +112,79 @@ const deleteArtist = async (
   }
 };
 
+const importCsv = async (
+  csvContent: string,
+  userId: string,
+  userRole: UserRole,
+) => {
+  const { data: validRows, errors: parseErrors } = csvUtil.parseCsv(
+    csvContent,
+    ArtistValidation.artistCsvRowSchema,
+  ) as { data: IArtistCsvRow[]; errors: CsvParseError[] };
+
+  if (parseErrors.length > 0) {
+    const previewErrors = parseErrors
+      .slice(0, 3)
+      .map((e) => `• Row ${e.row}: ${e.message}`)
+      .join("\n");
+
+    throw new BadRequestError(
+      `We couldn't import the CSV because some rows contain invalid data.\n\n${previewErrors}\n\nPlease correct the CSV and try again.`,
+    );
+  }
+
+  if (validRows.length === 0) {
+    throw new BadRequestError("CSV file contains no valid data rows");
+  }
+
+  const emails = validRows.map((row) => row.email);
+  const duplicateEmails = emails.filter(
+    (email, index) => emails.indexOf(email) !== index,
+  );
+
+  if (duplicateEmails.length > 0) {
+    throw new ConflictError(
+      `Duplicate emails found in CSV: ${[...new Set(duplicateEmails)].join(", ")}`,
+    );
+  }
+
+  const job = await jobDao.createJob({
+    type: JobType.ARTIST_IMPORT,
+    data: { rows: validRows, userId, userRole },
+    created_by: userId,
+  });
+
+  return { jobId: job.id };
+};
+
+const exportCsv = async (userId: string, userRole: UserRole) => {
+  const managerId = userRole === UserRole.ARTIST_MANAGER ? userId : undefined;
+
+  const artists = await artistDao.findAllArtistsForExport(managerId);
+
+  const columns = [
+    { key: "email" as const, header: "Email" },
+    { key: "first_name" as const, header: "First Name" },
+    { key: "last_name" as const, header: "Last Name" },
+    { key: "stage_name" as const, header: "Stage Name" },
+    { key: "dob" as const, header: "Date of Birth" },
+    { key: "gender" as const, header: "Gender" },
+    { key: "address" as const, header: "Address" },
+    { key: "first_release_year" as const, header: "First Release Year" },
+    { key: "user_status" as const, header: "Status" },
+    { key: "created_at" as const, header: "Created At" },
+    { key: "updated_at" as const, header: "Updated At" },
+  ];
+
+  return csvUtil.generateCsv(artists, columns);
+};
+
 export const artistService = {
   getAll,
   getByManagerId,
   getById,
   update,
   delete: deleteArtist,
+  importCsv,
+  exportCsv,
 };
