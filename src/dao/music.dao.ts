@@ -27,30 +27,41 @@ const findMusics = async ({
   const params: any[] = [];
 
   if (search) {
-    conditions.push("(title ILIKE ? OR genre ILIKE ? OR language ILIKE ?)");
+    conditions.push(
+      "(m.title ILIKE ? OR m.genre ILIKE ? OR m.language ILIKE ?)",
+    );
     params.push(`%${search}%`, `%${search}%`, `%${search}%`);
   }
 
   if (artistId) {
-    conditions.push("artist_id = ?");
+    conditions.push("m.artist_id = ?");
     params.push(artistId);
   }
 
   if (albumId) {
-    conditions.push("album_id = ?");
+    conditions.push("m.album_id = ?");
     params.push(albumId);
   }
 
   const where = conditions.length ? ` WHERE ${conditions.join(" AND ")}` : "";
 
   const { rows: countRows } = await db.raw(
-    `SELECT COUNT(*) AS count FROM musics${where}`,
+    `SELECT COUNT(*) AS count FROM musics m LEFT JOIN artists art ON m.artist_id = art.id LEFT JOIN users u ON art.user_id = u.id LEFT JOIN albums alb ON m.album_id = alb.id${where}`,
     params,
   );
   const total = Number(countRows[0].count);
 
   const { rows: data } = await db.raw(
-    `SELECT * FROM musics${where} ORDER BY created_at DESC LIMIT ? OFFSET ?`,
+    `SELECT 
+    m.*, 
+    CONCAT_WS(' ', u.first_name, u.last_name) AS artist_name, 
+    alb.title AS album_title 
+    FROM musics m 
+    LEFT JOIN artists art ON m.artist_id = art.id 
+    LEFT JOIN users u ON art.user_id = u.id 
+    LEFT JOIN albums alb ON m.album_id = alb.id
+    ${where} 
+    ORDER BY m.created_at DESC LIMIT ? OFFSET ?`,
     [...params, pageLimit, pageOffset],
   );
 

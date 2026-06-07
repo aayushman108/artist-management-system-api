@@ -16,7 +16,7 @@ export class MusicValidation {
         ),
         artistId: z.preprocess(
           optionalPreprocessor,
-          z.string().uuid({ message: "Invalid artist ID" }).optional(),
+          z.string().uuid({ message: "Invalid artist ID" }).optional().nullable(),
         ),
         albumId: z.preprocess(
           optionalPreprocessor,
