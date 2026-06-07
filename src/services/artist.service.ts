@@ -93,8 +93,8 @@ const deleteArtist = async (
 
   if (type === DeleteType.SOFT) {
     await db.transaction(async (trx) => {
-      await artistDao.deleteArtistById(id, trx);
       await artistDao.softDeleteUserByArtistId(id, trx);
+      await artistDao.deleteArtistById(id, trx);
     });
   } else {
     await artistDao.deleteUserByArtistId(id);
