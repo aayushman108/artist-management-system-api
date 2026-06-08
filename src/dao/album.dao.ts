@@ -94,10 +94,29 @@ const deleteAlbum = async (id: string) => {
   return rows[0];
 };
 
+const findAlbumsAll = async (artistId?: string) => {
+  const conditions: string[] = [];
+  const params: any[] = [];
+
+  if (artistId) {
+    conditions.push("artist_id = ?");
+    params.push(artistId);
+  }
+
+  const where = conditions.length ? ` WHERE ${conditions.join(" AND ")}` : "";
+
+  const { rows } = await db.raw(
+    `SELECT id, title FROM albums${where} ORDER BY title ASC`,
+    params,
+  );
+  return rows;
+};
+
 export const albumDao = {
   findAlbumById,
   findAlbums,
   createAlbum,
   updateAlbum,
   deleteAlbum,
+  findAlbumsAll,
 };

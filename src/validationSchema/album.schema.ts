@@ -16,7 +16,11 @@ export class AlbumValidation {
         ),
         artistId: z.preprocess(
           optionalPreprocessor,
-          z.string().uuid({ message: "Invalid artist ID" }).optional(),
+          z
+            .string()
+            .uuid({ message: "Invalid artist ID" })
+            .optional()
+            .nullable(),
         ),
         releaseDate: z.preprocess(
           optionalPreprocessor,

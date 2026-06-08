@@ -7,7 +7,13 @@ export const albumRouter = express.Router();
 
 albumRouter.use(verifyJWT);
 
-albumRouter.get("/", [authorize("READ_ALBUM")], albumController.getAlbums);
+albumRouter.get("/", [authorize("READ_MY_ALBUM")], albumController.getMyAlbums);
+
+albumRouter.get(
+  "/artist/:artistId",
+  [authorize("READ_ALBUM_BY_ARTIST")],
+  albumController.getAlbumByArtistId,
+);
 
 albumRouter.post(
   "/",

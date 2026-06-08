@@ -51,18 +51,28 @@ const deleteAlbum = asyncHandler(async (req: Request, res: Response) => {
   });
 });
 
-const getAlbums = asyncHandler(async (req: Request, res: Response) => {
-  const { page, limit, search, artist_id } = req.query;
+const getMyAlbums = asyncHandler(async (req: Request, res: Response) => {
+  const { page, limit, search, all } = req.query;
+  const userId = req.userId as string;
+
+  if (all === "true") {
+    const albums = await albumService.getMyAlbums({ userId, all: true });
+    return sendSuccessResponse(res, {
+      message: "My albums fetched successfully",
+      data: albums,
+      statusCode: HttpStatusCode.OK,
+    });
+  }
+
   const pageNumber = Number(page || 1);
   const pageLimit = Number(limit || 10);
 
-  const albumsData = await albumService.getAll({
+  const { total, data } = await albumService.getMyAlbums({
     page: pageNumber,
     limit: pageLimit,
     search: search as string,
-    artistId: artist_id as string,
+    userId,
   });
-  const { total, data } = albumsData;
 
   const pagination = generatePaginationObj({
     total,
@@ -71,15 +81,57 @@ const getAlbums = asyncHandler(async (req: Request, res: Response) => {
   });
 
   return sendSuccessResponse(res, {
-    message: "Albums fetched successfully",
+    message: "My albums fetched successfully",
     data: { data, pagination },
     statusCode: HttpStatusCode.OK,
   });
 });
 
+const getAlbumByArtistId = asyncHandler(
+  async (req: Request, res: Response) => {
+    const { artistId } = req.params;
+    const { page, limit, search, all } = req.query;
+
+    if (all === "true") {
+      const albums = await albumService.getAlbumByArtistId({
+        artistId,
+        all: true,
+      });
+      return sendSuccessResponse(res, {
+        message: "Albums fetched successfully",
+        data: albums,
+        statusCode: HttpStatusCode.OK,
+      });
+    }
+
+    const pageNumber = Number(page || 1);
+    const pageLimit = Number(limit || 10);
+
+    const { total, data } = await albumService.getAlbumByArtistId({
+      page: pageNumber,
+      limit: pageLimit,
+      search: search as string,
+      artistId,
+    });
+
+    const pagination = generatePaginationObj({
+      total,
+      page: pageNumber,
+      limit: pageLimit,
+    });
+
+    return sendSuccessResponse(res, {
+      message: "Albums fetched successfully",
+      data: { data, pagination },
+      statusCode: HttpStatusCode.OK,
+    });
+  },
+);
+
 export const albumController = {
   createAlbum,
   updateAlbum,
   deleteAlbum,
-  getAlbums,
+  getMyAlbums,
+  getAlbumByArtistId,
 };

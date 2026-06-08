@@ -57,17 +57,56 @@ async function deleteAlbum(id: string, userId: string, userRole: UserRole) {
   return deleted;
 }
 
-async function getAll(query: {
-  page: number;
-  limit: number;
+async function getMyAlbums(query: {
+  page?: number;
+  limit?: number;
   search?: string;
-  artistId?: string;
+  userId: string;
+  all?: boolean;
 }) {
-  const { page, limit, search, artistId } = query;
-  const pageOffset = (page - 1) * limit;
+  const { page, limit, search, userId, all } = query;
+
+  const artist = await userDao.findArtistByUserId(userId);
+  if (!artist) throw new NotFoundError("Artist profile not found");
+
+  if (all) {
+    const albums = await albumDao.findAlbumsAll(artist.id);
+    return albums;
+  }
+
+  const pageNumber = page || 1;
+  const pageLimit = limit || 10;
+  const pageOffset = (pageNumber - 1) * pageLimit;
 
   const result = await albumDao.findAlbums({
-    pageLimit: limit,
+    pageLimit,
+    pageOffset,
+    search,
+    artistId: artist.id,
+  });
+  return result;
+}
+
+async function getAlbumByArtistId(query: {
+  page?: number;
+  limit?: number;
+  search?: string;
+  artistId: string;
+  all?: boolean;
+}) {
+  const { page, limit, search, artistId, all } = query;
+
+  if (all) {
+    const albums = await albumDao.findAlbumsAll(artistId);
+    return albums;
+  }
+
+  const pageNumber = page || 1;
+  const pageLimit = limit || 10;
+  const pageOffset = (pageNumber - 1) * pageLimit;
+
+  const result = await albumDao.findAlbums({
+    pageLimit,
     pageOffset,
     search,
     artistId,
@@ -75,4 +114,10 @@ async function getAll(query: {
   return result;
 }
 
-export const albumService = { create, update, delete: deleteAlbum, getAll };
+export const albumService = {
+  create,
+  update,
+  delete: deleteAlbum,
+  getMyAlbums,
+  getAlbumByArtistId,
+};
