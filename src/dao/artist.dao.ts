@@ -21,14 +21,18 @@ const findArtists = async ({
 
   if (search) {
     conditions.push(
-      "(a.stage_name ILIKE ? OR u.first_name ILIKE ? OR u.last_name ILIKE ?)",
+      "(a.stage_name ILIKE ? OR u.first_name ILIKE ? OR u.last_name ILIKE ? OR u.email ILIKE ?)",
     );
-    params.push(`%${search}%`, `%${search}%`, `%${search}%`);
+    params.push(`%${search}%`, `%${search}%`, `%${search}%`, `%${search}%`);
   }
 
   if (managerId) {
-    conditions.push("a.manager_id = ?");
-    params.push(managerId);
+    if (managerId === "none") {
+      conditions.push("a.manager_id IS NULL");
+    } else {
+      conditions.push("a.manager_id = ?");
+      params.push(managerId);
+    }
   }
 
   const where = conditions.length ? ` WHERE ${conditions.join(" AND ")}` : "";
@@ -112,6 +116,7 @@ const updateArtist = async (id: string, data: Record<string, any>) => {
     "gender",
     "address",
     "first_release_year",
+    "manager_id",
   ];
 
   for (const field of allowedFields) {

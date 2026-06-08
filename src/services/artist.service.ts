@@ -21,9 +21,16 @@ const getAll = async (
   search: string | undefined,
   userId: string,
   userRole: UserRole,
+  filterManagerId?: string,
 ) => {
   const pageOffset = (page - 1) * limit;
-  const managerId = userRole === UserRole.ARTIST_MANAGER ? userId : undefined;
+  let managerId: string | undefined;
+
+  if (userRole === UserRole.ARTIST_MANAGER) {
+    managerId = userId;
+  } else if (userRole === UserRole.SUPER_ADMIN && filterManagerId) {
+    managerId = filterManagerId;
+  }
 
   return await artistDao.findArtists({
     pageLimit: limit,
@@ -76,6 +83,10 @@ const update = async (
 
   if (userRole === UserRole.ARTIST_MANAGER && artist.manager_id !== userId) {
     throw new ForbiddentError("You can only update artists managed by you");
+  }
+
+  if (data.manager_id !== undefined && userRole !== UserRole.SUPER_ADMIN) {
+    throw new ForbiddentError("Only super admin can assign or change artist manager");
   }
 
   const updated = await artistDao.updateArtist(id, data);

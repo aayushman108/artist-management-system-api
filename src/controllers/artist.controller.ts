@@ -10,7 +10,7 @@ import {
 import { IUpdateArtistInput } from "src/validationSchema";
 
 const getAllArtists = asyncHandler(async (req: Request, res: Response) => {
-  const { page, limit, search } = req.query;
+  const { page, limit, search, managerId } = req.query;
   const pageNumber = Number(page || 1);
   const pageLimit = Number(limit || 10);
   const userId = req.userId as string;
@@ -22,6 +22,7 @@ const getAllArtists = asyncHandler(async (req: Request, res: Response) => {
     search as string,
     userId,
     userRole,
+    managerId as string | undefined,
   );
 
   const { total, data } = artistsData;

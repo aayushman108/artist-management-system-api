@@ -31,14 +31,28 @@ export class ArtistValidation {
           patchPreprocessor,
           z.coerce.number().int().optional().nullable(),
         ),
+        managerId: z.preprocess(
+          patchPreprocessor,
+          z.string().uuid().optional().nullable(),
+        ),
       })
-      .transform(({ stageName, dob, gender, address, firstReleaseYear }) => ({
-        stage_name: stageName,
-        dob,
-        gender,
-        address,
-        first_release_year: firstReleaseYear,
-      })),
+      .transform(
+        ({
+          stageName,
+          dob,
+          gender,
+          address,
+          firstReleaseYear,
+          managerId,
+        }) => ({
+          stage_name: stageName,
+          dob,
+          gender,
+          address,
+          first_release_year: firstReleaseYear,
+          manager_id: managerId,
+        }),
+      ),
   });
 
   static deleteArtistSchema = z.object({
