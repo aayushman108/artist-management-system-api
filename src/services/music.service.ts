@@ -82,8 +82,9 @@ async function getMusicsByArtistId(query: {
   limit: number;
   search?: string;
   artistId: string;
+  albumId?: string;
 }) {
-  const { page, limit, search, artistId } = query;
+  const { page, limit, search, artistId, albumId } = query;
   const pageOffset = (page - 1) * limit;
 
   const result = await musicDao.findMusics({
@@ -91,6 +92,7 @@ async function getMusicsByArtistId(query: {
     pageOffset,
     search,
     artistId,
+    albumId,
   });
   return result;
 }
@@ -100,8 +102,9 @@ async function getMyMusics(query: {
   limit: number;
   search?: string;
   userId: string;
+  albumId?: string;
 }) {
-  const { page, limit, search, userId } = query;
+  const { page, limit, search, userId, albumId } = query;
 
   const artist = await userDao.findArtistByUserId(userId);
   if (!artist) throw new NotFoundError("Artist profile not found");
@@ -113,6 +116,7 @@ async function getMyMusics(query: {
     pageOffset,
     search,
     artistId: artist.id,
+    albumId,
   });
   return result;
 }

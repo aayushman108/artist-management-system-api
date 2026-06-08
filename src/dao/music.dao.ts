@@ -39,8 +39,12 @@ const findMusics = async ({
   }
 
   if (albumId) {
-    conditions.push("m.album_id = ?");
-    params.push(albumId);
+    if (albumId === "none") {
+      conditions.push("m.album_id IS NULL");
+    } else {
+      conditions.push("m.album_id = ?");
+      params.push(albumId);
+    }
   }
 
   const where = conditions.length ? ` WHERE ${conditions.join(" AND ")}` : "";
@@ -89,29 +93,13 @@ const updateMusic = async (id: string, data: IUpdateMusicInput) => {
   const updates: string[] = [];
   const params: any[] = [];
 
-  if (data.title !== undefined) {
-    updates.push("title = ?");
-    params.push(data.title);
-  }
+  const allowedFields = ["title", "album_id", "genre", "language", "release_date"];
 
-  if (data.album_id !== undefined) {
-    updates.push("album_id = ?::uuid");
-    params.push(data.album_id);
-  }
-
-  if (data.genre !== undefined) {
-    updates.push("genre = ?");
-    params.push(data.genre);
-  }
-
-  if (data.language !== undefined) {
-    updates.push("language = ?");
-    params.push(data.language);
-  }
-
-  if (data.release_date !== undefined) {
-    updates.push("release_date = ?");
-    params.push(data.release_date);
+  for (const field of allowedFields) {
+    if (data[field as keyof IUpdateMusicInput] !== undefined) {
+      updates.push(`${field} = ?`);
+      params.push(data[field as keyof IUpdateMusicInput]);
+    }
   }
 
   if (updates.length === 0) return null;

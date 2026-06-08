@@ -64,14 +64,13 @@ const updateAlbum = async (id: string, data: IUpdateAlbumInput) => {
   const updates: string[] = [];
   const params: any[] = [];
 
-  if (data.title !== undefined) {
-    updates.push("title = ?");
-    params.push(data.title);
-  }
+  const allowedFields = ["title", "release_date"];
 
-  if (data.release_date !== undefined) {
-    updates.push("release_date = ?");
-    params.push(data.release_date);
+  for (const field of allowedFields) {
+    if (data[field as keyof IUpdateAlbumInput] !== undefined) {
+      updates.push(`${field} = ?`);
+      params.push(data[field as keyof IUpdateAlbumInput]);
+    }
   }
 
   if (updates.length === 0) return null;

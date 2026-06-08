@@ -80,7 +80,7 @@ const getMusics = asyncHandler(async (req: Request, res: Response) => {
 
 const getMusicsByArtistId = asyncHandler(async (req: Request, res: Response) => {
   const { artistId } = req.params;
-  const { page, limit, search } = req.query;
+  const { page, limit, search, albumId } = req.query;
 
   const pageNumber = Number(page || 1);
   const pageLimit = Number(limit || 10);
@@ -90,6 +90,7 @@ const getMusicsByArtistId = asyncHandler(async (req: Request, res: Response) => 
     limit: pageLimit,
     search: search as string,
     artistId: artistId as string,
+    albumId: albumId as string,
   });
 
   const pagination = generatePaginationObj({
@@ -106,7 +107,7 @@ const getMusicsByArtistId = asyncHandler(async (req: Request, res: Response) => 
 });
 
 const getMyMusics = asyncHandler(async (req: Request, res: Response) => {
-  const { page, limit, search } = req.query;
+  const { page, limit, search, albumId } = req.query;
   const userId = req.userId as string;
 
   const pageNumber = Number(page || 1);
@@ -117,6 +118,7 @@ const getMyMusics = asyncHandler(async (req: Request, res: Response) => {
     limit: pageLimit,
     search: search as string,
     userId,
+    albumId: albumId as string,
   });
 
   const pagination = generatePaginationObj({
