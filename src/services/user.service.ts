@@ -256,4 +256,14 @@ const deleteUser = async (
   }
 };
 
-export const userService = { inviteUser, verifyInvite, getUsers, deleteUser };
+const getArtistManagers = async () => {
+  return await userDao.getArtistManagers();
+};
+
+export const userService = {
+  inviteUser,
+  verifyInvite,
+  getUsers,
+  deleteUser,
+  getArtistManagers,
+};

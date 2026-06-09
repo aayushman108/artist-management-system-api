@@ -285,6 +285,17 @@ const deleteArtistByUserId = async (userId: string, trx?: Knex.Transaction) => {
   return rows[0];
 };
 
+const getArtistManagers = async () => {
+  const { rows } = await db.raw(
+    `SELECT id, CONCAT_WS(' ', first_name, last_name) AS name
+     FROM users
+     WHERE role = ? AND status = ?
+     ORDER BY first_name ASC`,
+    [UserRole.ARTIST_MANAGER, UserStatus.ACTIVE],
+  );
+  return rows;
+};
+
 export const userDao = {
   createInvitation,
   findInvitationByEmail,
@@ -299,4 +310,5 @@ export const userDao = {
   deleteUserById,
   softDeleteUser,
   deleteArtistByUserId,
+  getArtistManagers,
 };

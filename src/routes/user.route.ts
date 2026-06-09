@@ -22,6 +22,12 @@ userRouter.post(
 );
 
 userRouter.get(
+  "/artist-managers",
+  [verifyJWT, authorize("READ_USER")],
+  userController.getArtistManagers,
+);
+
+userRouter.get(
   "/",
   [verifyJWT, authorize("READ_USER")],
   userController.getUsers,

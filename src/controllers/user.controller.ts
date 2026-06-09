@@ -83,4 +83,20 @@ const deleteUser = asyncHandler(async (req: Request, res: Response) => {
   });
 });
 
-export const userController = { inviteUser, verifyInvite, getUsers, deleteUser };
+const getArtistManagers = asyncHandler(async (req: Request, res: Response) => {
+  const data = await userService.getArtistManagers();
+
+  return sendSuccessResponse(res, {
+    message: "Artist managers fetched successfully",
+    data,
+    statusCode: HttpStatusCode.OK,
+  });
+});
+
+export const userController = {
+  inviteUser,
+  verifyInvite,
+  getUsers,
+  deleteUser,
+  getArtistManagers,
+};
