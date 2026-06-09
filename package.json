@@ -11,7 +11,7 @@
     "migrate:make": "npx knex migrate:make create_user_table -x ts --knexfile src/database/knexfile.ts",
     "dev": "nodemon --exec ts-node-dev -r tsconfig-paths/register --files src/index.ts",
     "build": "tsc && tsc-alias",
-    "start": "node dist/index.js"
+    "start": "node dist/src/index.js"
   },
   "keywords": [],
   "author": "",
