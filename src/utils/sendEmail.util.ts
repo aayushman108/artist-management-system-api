@@ -17,8 +17,8 @@ interface IMailOptions {
 }
 
 export async function sendMail(options: IMailOptions) {
-  const templatePath = path.join(__dirname, "..", "emails", options.template);
-  const cssPath = path.join(__dirname, "..", "emails", "style.css");
+  const templatePath = path.join(process.cwd(), "src", "emails", options.template);
+  const cssPath = path.join(process.cwd(), "src", "emails", "style.css");
 
   const html = await ejs.renderFile(templatePath, options.data);
   const css = fs.readFileSync(cssPath, "utf8");
