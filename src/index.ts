@@ -16,9 +16,11 @@ import {
 } from "./routes";
 import { initEmailListeners } from "./listeners/email.listener";
 import { initJobWorker } from "./workers/job.worker";
+import { initKeepAlive } from "./utils";
 
 initEmailListeners();
 initJobWorker();
+initKeepAlive();
 
 const app = express();
 
