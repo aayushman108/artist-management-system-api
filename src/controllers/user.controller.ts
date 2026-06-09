@@ -3,6 +3,7 @@ import { HttpStatusCode, UserRole, UserStatus } from "src/enums";
 import { sendSuccessResponse, generatePaginationObj } from "src/utils";
 import { asyncHandler } from "src/utils/asyncHandler";
 import { userService } from "src/services/user.service";
+import { IUpdateProfileInput } from "src/validationSchema/user.schema";
 
 const inviteUser = asyncHandler(async (req: Request, res: Response) => {
   const { email, role, firstName, lastName } = req.body;
@@ -34,6 +35,38 @@ const verifyInvite = asyncHandler(async (req: Request, res: Response) => {
     message: "Invitation verified and user created successfully.",
     data: user,
     statusCode: HttpStatusCode.CREATED,
+  });
+});
+
+const getUserById = asyncHandler(async (req: Request, res: Response) => {
+  const { id } = req.params;
+
+  const user = await userService.getUserById(id);
+
+  return sendSuccessResponse(res, {
+    message: "User fetched successfully",
+    data: user,
+    statusCode: HttpStatusCode.OK,
+  });
+});
+
+const updateProfile = asyncHandler(async (req: Request, res: Response) => {
+  const targetUserId = req.params.id || req.userId;
+  const data = req.body as IUpdateProfileInput;
+  const currentUserId = req.userId as string;
+  const currentUserRole = req.userRole as UserRole;
+
+  const profile = await userService.updateProfile(
+    targetUserId as string,
+    data,
+    currentUserId,
+    currentUserRole,
+  );
+
+  return sendSuccessResponse(res, {
+    message: "Profile updated successfully",
+    data: profile,
+    statusCode: HttpStatusCode.OK,
   });
 });
 
@@ -96,6 +129,8 @@ const getArtistManagers = asyncHandler(async (req: Request, res: Response) => {
 export const userController = {
   inviteUser,
   verifyInvite,
+  getUserById,
+  updateProfile,
   getUsers,
   deleteUser,
   getArtistManagers,

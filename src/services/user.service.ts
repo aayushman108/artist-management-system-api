@@ -4,12 +4,13 @@ import {
   appEmitter,
   EVENTS,
   ConflictError,
+  ForbiddentError,
   NotFoundError,
   UnAuthorizedError,
   BadRequestError,
 } from "src/utils";
 import { userDao } from "src/dao/user.dao";
-import { authDao } from "src/dao";
+import { authDao, artistDao } from "src/dao";
 import { ALLOWED_USER_CREATIONS } from "src/constants/permissions.constant";
 import { UserRole, InvitationStatus, UserStatus, DeleteType } from "src/enums";
 import { db } from "src/database/db";
@@ -144,6 +145,13 @@ const verifyInvite = async (token: string, password: string) => {
       );
     }
 
+    if (
+      invitation.role === UserRole.SUPER_ADMIN ||
+      invitation.role === UserRole.ARTIST_MANAGER
+    ) {
+      await userDao.createProfile(createdUser.id, trx);
+    }
+
     await userDao.updateInvitationStatus(
       invitation.id,
       InvitationStatus.ACCEPTED,
@@ -154,6 +162,82 @@ const verifyInvite = async (token: string, password: string) => {
   });
 
   return user;
+};
+
+const getUserById = async (userId: string) => {
+  const user = await userDao.findUserById(userId);
+  if (!user) throw new NotFoundError("User not found");
+  return user;
+};
+
+const updateProfile = async (
+  userId: string,
+  data: {
+    phone?: string | null;
+    dob?: string | null;
+    gender?: string | null;
+    address?: string | null;
+    first_name?: string;
+    last_name?: string | null;
+  },
+  currentUserId: string,
+  currentUserRole: UserRole,
+) => {
+  const isSelfUpdate = userId === currentUserId;
+
+  const targetUser = await authDao.findUserById(userId);
+  if (!targetUser) throw new NotFoundError("User not found");
+
+  if (currentUserRole === UserRole.ARTIST_MANAGER && !isSelfUpdate) {
+    throw new ForbiddentError("You can only edit your own profile");
+  }
+
+  if (
+    currentUserRole === UserRole.SUPER_ADMIN &&
+    targetUser.role === UserRole.SUPER_ADMIN &&
+    !isSelfUpdate
+  ) {
+    throw new ForbiddentError(
+      "Super admin can only update artist manager profiles",
+    );
+  }
+
+  const userFields: { first_name?: string; last_name?: string | null } = {};
+  if (data.first_name !== undefined) userFields.first_name = data.first_name;
+  if (data.last_name !== undefined) userFields.last_name = data.last_name;
+
+  await db.transaction(async (trx) => {
+    const hasProfileFields =
+      data.phone !== undefined ||
+      data.dob !== undefined ||
+      data.gender !== undefined ||
+      data.address !== undefined;
+
+    if (hasProfileFields) {
+      const hasProfileRole =
+        targetUser.role === UserRole.SUPER_ADMIN ||
+        targetUser.role === UserRole.ARTIST_MANAGER;
+
+      if (!hasProfileRole) {
+        throw new ForbiddentError(
+          "Profile fields are only available for Super Admin and Artist Manager roles.",
+        );
+      }
+
+      const profile = await userDao.findProfileByUserId(userId, trx);
+      if (!profile) {
+        await userDao.createProfile(userId, trx);
+      }
+
+      await userDao.updateProfile(userId, data, trx);
+    }
+
+    if (Object.keys(userFields).length > 0) {
+      await userDao.updateUser(userId, userFields, trx);
+    }
+  });
+
+  return await userDao.findUserById(userId);
 };
 
 const getUsers = async (
@@ -263,6 +347,8 @@ const getArtistManagers = async () => {
 export const userService = {
   inviteUser,
   verifyInvite,
+  getUserById,
+  updateProfile,
   getUsers,
   deleteUser,
   getArtistManagers,

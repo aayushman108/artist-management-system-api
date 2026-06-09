@@ -28,9 +28,35 @@ userRouter.get(
 );
 
 userRouter.get(
+  "/:id",
+  [verifyJWT, authorize("READ_USER")],
+  userController.getUserById,
+);
+
+userRouter.get(
   "/",
   [verifyJWT, authorize("READ_USER")],
   userController.getUsers,
+);
+
+userRouter.patch(
+  "/profile/me",
+  [
+    authorize("UPDATE_OWN_PROFILE"),
+    verifyJWT,
+    validateRequest(UserValidation.updateProfileSchema),
+  ],
+  userController.updateProfile,
+);
+
+userRouter.patch(
+  "/:id/profile",
+  [
+    verifyJWT,
+    authorize("UPDATE_PROFILE"),
+    validateRequest(UserValidation.updateProfileSchema),
+  ],
+  userController.updateProfile,
 );
 
 userRouter.delete(

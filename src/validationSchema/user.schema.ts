@@ -1,7 +1,8 @@
-import { DeleteType, UserRole } from "src/enums";
+import { DeleteType, Gender, UserRole } from "src/enums";
 import {
   emailPreprocessor,
   optionalPreprocessor,
+  patchPreprocessor,
   requiredPreprocessor,
 } from "src/utils/validationSchemaPreprocessor";
 import { z } from "zod";
@@ -58,6 +59,62 @@ export class UserValidation {
     }),
   });
 
+  // Update profile schema (params.id optional for /profile/me)
+  static updateProfileSchema = z.object({
+    params: z.object({
+      id: z.string().uuid({ message: "Invalid user ID" }).optional(),
+    }),
+    body: z
+      .object({
+        phone: z.preprocess(
+          patchPreprocessor,
+          z
+            .string()
+            .regex(/^9\d{9}$/, "Enter a valid 10-digit number starting with 9")
+            .optional()
+            .nullable(),
+        ),
+        dob: z.preprocess(patchPreprocessor, z.string().optional().nullable()),
+        gender: z.preprocess(
+          patchPreprocessor,
+          z
+            .nativeEnum(Gender, { message: "Invalid gender" })
+            .optional()
+            .nullable(),
+        ),
+        address: z.preprocess(
+          patchPreprocessor,
+          z.string().optional().nullable(),
+        ),
+        firstName: z.preprocess(
+          patchPreprocessor,
+          z
+            .string()
+            .min(1, { message: "First name is required" })
+            .max(100, { message: "First name must not exceed 100 characters" })
+            .optional(),
+        ),
+        lastName: z.preprocess(
+          patchPreprocessor,
+          z
+            .string()
+            .max(100, { message: "Last name must not exceed 100 characters" })
+            .optional()
+            .nullable(),
+        ),
+      })
+      .transform(
+        ({ phone, dob, gender, address, firstName, lastName }) => ({
+          phone,
+          dob,
+          gender,
+          address,
+          first_name: firstName,
+          last_name: lastName,
+        }),
+      ),
+  });
+
   // Delete user schema
   static deleteUserSchema = z.object({
     params: z.object({
@@ -72,3 +129,9 @@ export class UserValidation {
 export type IInviteUserInput = z.infer<
   typeof UserValidation.inviteUserSchema.shape.body
 >;
+
+export type IUpdateProfileInput = z.infer<
+  typeof UserValidation.updateProfileSchema.shape.body
+>;
+
+

@@ -175,6 +175,10 @@ const getUsers = async (
       p.avatar,
       a.stage_name,
       a.manager_id,
+      a.dob AS artist_dob,
+      a.gender AS artist_gender,
+      a.address AS artist_address,
+      a.first_release_year,
       CONCAT_WS(' ', c.first_name, c.last_name) AS creator_name,
       c.role AS creator_role,
       CONCAT_WS(' ', m.first_name, m.last_name) AS artist_manager_name
@@ -231,6 +235,10 @@ const getUsers = async (
         : null,
       artist: isArtist
         ? {
+            dob: row.artist_dob,
+            gender: row.artist_gender,
+            address: row.artist_address,
+            first_release_year: row.first_release_year,
             stage_name: row.stage_name,
             manager_id: row.manager_id,
             artist_manager_name: row.artist_manager_name,
@@ -240,6 +248,84 @@ const getUsers = async (
   });
 
   return { total: Number(countRows[0].count), data: formattedData };
+};
+
+const findUserById = async (userId: string) => {
+  const { rows } = await db.raw(
+    `SELECT 
+      u.id,
+      u.email,
+      u.first_name,
+      u.last_name,
+      u.role,
+      u.status,
+      u.created_at,
+      u.created_by,
+      p.dob,
+      p.gender,
+      p.address,
+      p.phone,
+      p.avatar,
+      a.stage_name,
+      a.manager_id,
+      a.dob AS artist_dob,
+      a.gender AS artist_gender,
+      a.address AS artist_address,
+      a.first_release_year,
+      CONCAT_WS(' ', c.first_name, c.last_name) AS creator_name,
+      c.role AS creator_role,
+      CONCAT_WS(' ', m.first_name, m.last_name) AS artist_manager_name
+    FROM users u
+    LEFT JOIN profiles p ON u.id = p.user_id AND u.role IN (?, ?)
+    LEFT JOIN artists a ON u.id = a.user_id AND u.role = ?
+    LEFT JOIN users c ON u.created_by = c.id
+    LEFT JOIN users m ON a.manager_id = m.id
+    WHERE u.id = ?
+    LIMIT 1`,
+    [UserRole.SUPER_ADMIN, UserRole.ARTIST_MANAGER, UserRole.ARTIST, userId],
+  );
+
+  const row = rows[0];
+  if (!row) return null;
+
+  const hasProfile =
+    row.role === UserRole.SUPER_ADMIN || row.role === UserRole.ARTIST_MANAGER;
+  const isArtist = row.role === UserRole.ARTIST;
+
+  return {
+    user: {
+      id: row.id,
+      email: row.email,
+      first_name: row.first_name,
+      last_name: row.last_name,
+      role: row.role,
+      status: row.status,
+      created_at: row.created_at,
+      created_by: row.created_by,
+      creator_name: row.creator_name,
+      creator_role: row.creator_role,
+    },
+    profile: hasProfile
+      ? {
+          dob: row.dob,
+          gender: row.gender,
+          address: row.address,
+          phone: row.phone,
+          avatar: row.avatar,
+        }
+      : null,
+    artist: isArtist
+      ? {
+          dob: row.artist_dob,
+          gender: row.artist_gender,
+          address: row.artist_address,
+          stage_name: row.stage_name,
+          manager_id: row.manager_id,
+          first_release_year: row.first_release_year,
+          artist_manager_name: row.artist_manager_name,
+        }
+      : null,
+  };
 };
 
 const findArtistByUserId = async (userId: string) => {
@@ -285,6 +371,92 @@ const deleteArtistByUserId = async (userId: string, trx?: Knex.Transaction) => {
   return rows[0];
 };
 
+const findProfileByUserId = async (userId: string, trx?: Knex.Transaction) => {
+  const client = trx || db;
+  const { rows } = await client.raw(
+    "SELECT * FROM profiles WHERE user_id = ? LIMIT 1",
+    [userId],
+  );
+  return rows[0];
+};
+
+const createProfile = async (userId: string, trx?: Knex.Transaction) => {
+  const client = trx || db;
+  const { rows } = await client.raw(
+    `INSERT INTO profiles (user_id) VALUES (?) RETURNING *`,
+    [userId],
+  );
+  return rows[0];
+};
+
+const updateProfile = async (
+  userId: string,
+  data: {
+    phone?: string | null;
+    dob?: string | null;
+    gender?: string | null;
+    address?: string | null;
+  },
+  trx?: Knex.Transaction,
+) => {
+  const client = trx || db;
+  const updates: string[] = [];
+  const params: any[] = [];
+
+  const allowedFields = ["phone", "dob", "gender", "address"];
+
+  for (const field of allowedFields) {
+    if (data[field as keyof typeof data] !== undefined) {
+      updates.push(`${field} = ?`);
+      params.push(data[field as keyof typeof data]);
+    }
+  }
+
+  if (updates.length === 0) {
+    return findProfileByUserId(userId, trx);
+  }
+
+  updates.push("updated_at = NOW()");
+
+  const { rows } = await client.raw(
+    `UPDATE profiles SET ${updates.join(", ")}
+     WHERE user_id = ?
+     RETURNING *`,
+    [...params, userId],
+  );
+  return rows[0];
+};
+
+const updateUser = async (
+  id: string,
+  data: { first_name?: string; last_name?: string | null },
+  trx?: Knex.Transaction,
+) => {
+  const client = trx || db;
+  const updates: string[] = [];
+  const params: any[] = [];
+
+  const allowedFields = ["first_name", "last_name"];
+
+  for (const field of allowedFields) {
+    if (data[field as keyof typeof data] !== undefined) {
+      updates.push(`${field} = ?`);
+      params.push(data[field as keyof typeof data]);
+    }
+  }
+
+  if (updates.length === 0) return null;
+
+  updates.push("updated_at = NOW()");
+  params.push(id);
+
+  const { rows } = await client.raw(
+    `UPDATE users SET ${updates.join(", ")} WHERE id = ? RETURNING *`,
+    params,
+  );
+  return rows[0];
+};
+
 const getArtistManagers = async () => {
   const { rows } = await db.raw(
     `SELECT id, CONCAT_WS(' ', first_name, last_name) AS name
@@ -305,10 +477,15 @@ export const userDao = {
   createUserFromInvitation,
   createArtist,
   getUsers,
+  findUserById,
+  findProfileByUserId,
+  createProfile,
+  updateProfile,
   findArtistByUserId,
   countUsersCreatedBy,
   deleteUserById,
   softDeleteUser,
   deleteArtistByUserId,
+  updateUser,
   getArtistManagers,
 };

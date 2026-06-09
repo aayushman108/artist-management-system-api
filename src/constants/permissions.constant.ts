@@ -30,6 +30,10 @@ export const PERMISSIONS = {
   IMPORT_ARTIST: [UserRole.SUPER_ADMIN, UserRole.ARTIST_MANAGER],
   EXPORT_ARTIST: [UserRole.SUPER_ADMIN, UserRole.ARTIST_MANAGER],
 
+  // Profile Permissions
+  UPDATE_PROFILE: [UserRole.SUPER_ADMIN],
+  UPDATE_OWN_PROFILE: [UserRole.SUPER_ADMIN, UserRole.ARTIST_MANAGER],
+
   // Invitation Request Permissions
   MANAGE_INVITATION_REQUEST: [UserRole.SUPER_ADMIN],
 };
