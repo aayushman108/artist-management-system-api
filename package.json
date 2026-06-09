@@ -1,7 +1,7 @@
 {
   "name": "artist-management-system-api",
   "version": "1.0.0",
-  "main": "index.js",
+  "main": "dist/src/index.js",
   "scripts": {
     "migrate:list": "npx knex migrate:list --knexfile src/database/knexfile.ts",
     "migrate:up": "npx knex migrate:up --knexfile src/database/knexfile.ts",
