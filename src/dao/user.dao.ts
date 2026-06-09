@@ -173,6 +173,7 @@ const getUsers = async (
       p.address,
       p.phone,
       p.avatar,
+      a.id as artist_id,
       a.stage_name,
       a.manager_id,
       a.dob AS artist_dob,
@@ -235,6 +236,7 @@ const getUsers = async (
         : null,
       artist: isArtist
         ? {
+            id: row.artist_id,
             dob: row.artist_dob,
             gender: row.artist_gender,
             address: row.artist_address,
@@ -266,6 +268,7 @@ const findUserById = async (userId: string) => {
       p.address,
       p.phone,
       p.avatar,
+      a.id as artist_id,
       a.stage_name,
       a.manager_id,
       a.dob AS artist_dob,
@@ -316,6 +319,7 @@ const findUserById = async (userId: string) => {
       : null,
     artist: isArtist
       ? {
+          id: row.artist_id,
           dob: row.artist_dob,
           gender: row.artist_gender,
           address: row.artist_address,
