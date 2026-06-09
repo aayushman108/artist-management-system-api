@@ -9,7 +9,12 @@ import {
   sendSuccessResponse,
   UnAuthorizedError,
 } from "src/utils";
-import { ILoginInput, ISignupInput } from "src/validationSchema";
+import {
+  IForgotPasswordInput,
+  ILoginInput,
+  IResetPasswordInput,
+  ISignupInput,
+} from "src/validationSchema";
 
 const signup = asyncHandler(async (req: Request, res: Response) => {
   const data = await authService.signup(req.body as ISignupInput);
@@ -126,6 +131,28 @@ const checkSignupEligibility = asyncHandler(
   },
 );
 
+const forgotPassword = asyncHandler(async (req: Request, res: Response) => {
+  const result = await authService.forgotPassword(
+    req.body as IForgotPasswordInput,
+  );
+
+  return sendSuccessResponse(res, {
+    message: result.message,
+    statusCode: HttpStatusCode.OK,
+  });
+});
+
+const resetPassword = asyncHandler(async (req: Request, res: Response) => {
+  const result = await authService.resetPassword(
+    req.body as IResetPasswordInput,
+  );
+
+  return sendSuccessResponse(res, {
+    message: result.message,
+    statusCode: HttpStatusCode.OK,
+  });
+});
+
 export const authController = {
   signup,
   verifyEmail,
@@ -134,4 +161,6 @@ export const authController = {
   refresh,
   logout,
   checkSignupEligibility,
+  forgotPassword,
+  resetPassword,
 };

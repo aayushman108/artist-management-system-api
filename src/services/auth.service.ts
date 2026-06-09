@@ -6,12 +6,17 @@ import {
   NotFoundError,
   UnAuthorizedError,
 } from "src/utils";
-import { ILoginInput, ISignupInput } from "src/validationSchema";
+import {
+  IForgotPasswordInput,
+  ILoginInput,
+  IResetPasswordInput,
+  ISignupInput,
+} from "src/validationSchema";
 import jwt, { Secret } from "jsonwebtoken";
 import { ENV } from "src/constants";
-import { authDao } from "src/dao";
+import { authDao, userDao } from "src/dao";
 import bcrypt from "bcrypt";
-import { UserStatus } from "src/enums";
+import { UserRole, UserStatus } from "src/enums";
 import { jwtService } from "./jwt.service";
 
 interface ITokenVerificationBody {
@@ -100,6 +105,14 @@ async function createUser(user: ISignupInput & { status?: UserStatus }) {
   };
 
   const newUser = await authDao.createUser(secureUser);
+
+  if (
+    secureUser.role === UserRole.SUPER_ADMIN ||
+    secureUser.role === UserRole.ARTIST_MANAGER
+  ) {
+    await userDao.createProfile(newUser.id);
+  }
+
   return newUser;
 }
 
@@ -133,15 +146,12 @@ async function login(user: ILoginInput) {
 }
 
 async function getMe(userId: string) {
-  const user = await authDao.findUserById(userId);
+  const user = await userDao.findUserById(userId);
   if (!user) {
     throw new NotFoundError("User not found");
   }
 
-  return {
-    ...user,
-    password_hash: undefined,
-  };
+  return user;
 }
 
 async function refresh(refreshToken: string) {
@@ -196,6 +206,46 @@ async function checkSignupEligibility() {
   };
 }
 
+async function forgotPassword(payload: IForgotPasswordInput) {
+  const user = await authDao.findByEmail(payload.email);
+  if (!user) {
+    throw new NotFoundError("No user found with this email address.");
+  }
+
+  const resetToken = jwtService.generateForgotPasswordToken(user);
+
+  appEmitter.emit(EVENTS.EMAIL.FORGOT_PASSWORD, {
+    email: user.email,
+    fullName: `${user.first_name} ${user.last_name}`,
+    resetToken,
+  });
+
+  return { message: "Password reset link sent to your email." };
+}
+
+async function resetPassword(payload: IResetPasswordInput) {
+  try {
+    const { id } = jwt.decode(payload.token) as { id: string };
+    const user = await authDao.findUserById(id);
+
+    if (!user) {
+      throw new NotFoundError("User not found.");
+    }
+
+    jwtService.verifyForgotPasswordToken(payload.token, user);
+
+    const salt = await bcrypt.genSalt(10);
+    const passwordHash = await bcrypt.hash(payload.password, salt);
+
+    await authDao.resetPassword(user.id, passwordHash);
+
+    return { message: "Password reset successful. You can now login." };
+  } catch (error) {
+    if (error instanceof NotFoundError) throw error;
+    throw new UnAuthorizedError("Invalid or expired reset token.");
+  }
+}
+
 export const authService = {
   signup,
   verifyEmailVerificationToken,
@@ -205,4 +255,6 @@ export const authService = {
   refresh,
   logout,
   checkSignupEligibility,
+  forgotPassword,
+  resetPassword,
 };

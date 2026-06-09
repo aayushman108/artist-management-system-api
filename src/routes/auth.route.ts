@@ -21,3 +21,14 @@ authRouter.post(
 authRouter.get("/me", verifyJWT, authController.getMe);
 authRouter.get("/refresh", authController.refresh);
 authRouter.post("/logout", authController.logout);
+
+authRouter.post(
+  "/forgot-password",
+  validateRequest(AuthValidation.forgotPasswordSchema),
+  authController.forgotPassword,
+);
+authRouter.post(
+  "/reset-password",
+  validateRequest(AuthValidation.resetPasswordSchema),
+  authController.resetPassword,
+);

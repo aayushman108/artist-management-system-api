@@ -38,4 +38,21 @@ const hasAnySuperAdmin = async (): Promise<boolean> => {
   return rows[0].has_super_admin;
 };
 
-export const authDao = { findByEmail, createUser, findUserById, hasAnySuperAdmin };
+const resetPassword = async (userId: string, newPasswordHash: string) => {
+  const { rows } = await db.raw(
+    `UPDATE users 
+       SET password_hash = ?, updated_at = NOW()
+       WHERE id = ?
+       RETURNING to_jsonb(users) - 'password_hash' AS user`,
+    [newPasswordHash, userId],
+  );
+  return rows[0].user;
+};
+
+export const authDao = {
+  findByEmail,
+  createUser,
+  findUserById,
+  hasAnySuperAdmin,
+  resetPassword,
+};
