@@ -1,6 +1,11 @@
 import express from "express";
 import { artistController } from "src/controllers";
-import { authorize, csvUpload, validateRequest, verifyJWT } from "src/middlewares";
+import {
+  authorize,
+  csvUpload,
+  validateRequest,
+  verifyJWT,
+} from "src/middlewares";
 import { ArtistValidation } from "src/validationSchema";
 
 export const artistRouter = express.Router();
@@ -44,6 +49,21 @@ artistRouter.put(
     validateRequest(ArtistValidation.updateArtistSchema),
   ],
   artistController.updateArtist,
+);
+
+artistRouter.patch(
+  "/profile/me",
+  [validateRequest(ArtistValidation.updateArtistProfileSchema)],
+  artistController.updateMyProfile,
+);
+
+artistRouter.patch(
+  "/:id/profile",
+  [
+    authorize("UPDATE_ARTIST"),
+    validateRequest(ArtistValidation.updateArtistProfileSchema),
+  ],
+  artistController.updateArtistProfile,
 );
 
 artistRouter.delete(

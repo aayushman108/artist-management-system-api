@@ -1,13 +1,17 @@
 import { Request, Response } from "express";
 import { HttpStatusCode, UserRole, DeleteType } from "src/enums";
 import { artistService } from "src/services/artist.service";
+import { userService } from "src/services/user.service";
 import {
   BadRequestError,
   asyncHandler,
   generatePaginationObj,
   sendSuccessResponse,
 } from "src/utils";
-import { IUpdateArtistInput } from "src/validationSchema";
+import {
+  IUpdateArtistInput,
+  IUpdateArtistProfileInput,
+} from "src/validationSchema";
 
 const getAllArtists = asyncHandler(async (req: Request, res: Response) => {
   const { page, limit, search, managerId } = req.query;
@@ -98,6 +102,40 @@ const updateArtist = asyncHandler(async (req: Request, res: Response) => {
   });
 });
 
+const updateArtistProfile = asyncHandler(
+  async (req: Request, res: Response) => {
+    const targetUserId = req.params.id || req.userId;
+    const data = req.body as IUpdateArtistProfileInput;
+    const currentUserId = req.userId as string;
+    const currentUserRole = req.userRole as UserRole;
+
+    const result = await artistService.updateArtistProfile(
+      targetUserId as string,
+      data,
+      currentUserId,
+      currentUserRole,
+    );
+
+    return sendSuccessResponse(res, {
+      message: "Artist profile updated successfully",
+      data: result,
+      statusCode: HttpStatusCode.OK,
+    });
+  },
+);
+
+const updateMyProfile = asyncHandler(async (req: Request, res: Response) => {
+  const data = req.body as IUpdateArtistProfileInput;
+  const userId = req.userId as string;
+
+  const result = await artistService.updateMyProfile(userId, data);
+
+  return sendSuccessResponse(res, {
+    message: "Profile updated successfully",
+    data: result,
+  });
+});
+
 const deleteArtist = asyncHandler(async (req: Request, res: Response) => {
   const { id } = req.params;
   const { type } = req.body;
@@ -149,6 +187,8 @@ export const artistController = {
   getArtistsByManagerId,
   getArtistByArtistId,
   updateArtist,
+  updateMyProfile,
+  updateArtistProfile,
   deleteArtist,
   importCsv,
   exportCsv,

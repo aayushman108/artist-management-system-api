@@ -37,14 +37,7 @@ export class ArtistValidation {
         ),
       })
       .transform(
-        ({
-          stageName,
-          dob,
-          gender,
-          address,
-          firstReleaseYear,
-          managerId,
-        }) => ({
+        ({ stageName, dob, gender, address, firstReleaseYear, managerId }) => ({
           stage_name: stageName,
           dob,
           gender,
@@ -62,6 +55,73 @@ export class ArtistValidation {
     body: z.object({
       type: z.enum([DeleteType.HARD, DeleteType.SOFT]).optional(),
     }),
+  });
+
+  static updateArtistProfileSchema = z.object({
+    params: z.object({
+      id: z.string().uuid({ message: "Invalid user ID" }).optional(),
+    }),
+    body: z
+      .object({
+        stageName: z.preprocess(
+          patchPreprocessor,
+          z.string().min(1).max(255).optional(),
+        ),
+        dob: z.preprocess(patchPreprocessor, z.string().optional().nullable()),
+        gender: z.preprocess(
+          patchPreprocessor,
+          z.nativeEnum(Gender).optional().nullable(),
+        ),
+        address: z.preprocess(
+          patchPreprocessor,
+          z.string().optional().nullable(),
+        ),
+        firstReleaseYear: z.preprocess(
+          patchPreprocessor,
+          z.coerce.number().int().optional().nullable(),
+        ),
+        managerId: z.preprocess(
+          patchPreprocessor,
+          z.string().uuid().optional().nullable(),
+        ),
+        firstName: z.preprocess(
+          patchPreprocessor,
+          z
+            .string()
+            .min(1, { message: "First name is required" })
+            .max(100, { message: "First name must not exceed 100 characters" })
+            .optional(),
+        ),
+        lastName: z.preprocess(
+          patchPreprocessor,
+          z
+            .string()
+            .max(100, { message: "Last name must not exceed 100 characters" })
+            .optional()
+            .nullable(),
+        ),
+      })
+      .transform(
+        ({
+          stageName,
+          dob,
+          gender,
+          address,
+          firstReleaseYear,
+          managerId,
+          firstName,
+          lastName,
+        }) => ({
+          stage_name: stageName,
+          dob,
+          gender,
+          address,
+          first_release_year: firstReleaseYear,
+          manager_id: managerId,
+          first_name: firstName,
+          last_name: lastName,
+        }),
+      ),
   });
 
   static artistCsvRowSchema = z.object({
@@ -116,3 +176,7 @@ export type IUpdateArtistInput = z.infer<
 >;
 
 export type IArtistCsvRow = z.infer<typeof ArtistValidation.artistCsvRowSchema>;
+
+export type IUpdateArtistProfileInput = z.infer<
+  typeof ArtistValidation.updateArtistProfileSchema.shape.body
+>;

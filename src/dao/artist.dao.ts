@@ -106,7 +106,8 @@ const findArtistByUserId = async (userId: string) => {
   return rows[0];
 };
 
-const updateArtist = async (id: string, data: Record<string, any>) => {
+const updateArtist = async (id: string, data: Record<string, any>, trx?: Knex.Transaction) => {
+  const client = trx || db;
   const updates: string[] = [];
   const params: any[] = [];
 
@@ -131,7 +132,7 @@ const updateArtist = async (id: string, data: Record<string, any>) => {
   updates.push("updated_at = NOW()");
   params.push(id);
 
-  const { rows } = await db.raw(
+  const { rows } = await client.raw(
     `UPDATE artists SET ${updates.join(", ")} WHERE id = ? RETURNING *`,
     params,
   );

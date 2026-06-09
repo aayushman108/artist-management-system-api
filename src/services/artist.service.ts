@@ -1,5 +1,5 @@
 import { UserRole, DeleteType, JobType } from "src/enums";
-import { artistDao, jobDao } from "src/dao";
+import { artistDao, authDao, jobDao, userDao } from "src/dao";
 import { db } from "src/database/db";
 import {
   BadRequestError,
@@ -11,6 +11,7 @@ import {
 import {
   ArtistValidation,
   IUpdateArtistInput,
+  IUpdateArtistProfileInput,
   IArtistCsvRow,
 } from "src/validationSchema";
 import { CsvParseError } from "src/utils/csv.util";
@@ -86,11 +87,84 @@ const update = async (
   }
 
   if (data.manager_id !== undefined && userRole !== UserRole.SUPER_ADMIN) {
-    throw new ForbiddentError("Only super admin can assign or change artist manager");
+    throw new ForbiddentError(
+      "Only super admin can assign or change artist manager",
+    );
   }
 
   const updated = await artistDao.updateArtist(id, data);
   return updated;
+};
+
+const updateMyProfile = async (
+  userId: string,
+  data: IUpdateArtistProfileInput,
+) => {
+  const artist = await artistDao.findArtistByUserId(userId);
+  if (!artist) throw new NotFoundError("Artist profile not found");
+
+  await db.transaction(async (trx) => {
+    await artistDao.updateArtist(artist.id, data, trx);
+    await userDao.updateUser(userId, data, trx);
+  });
+
+  return await artistDao.findArtistById(artist.id);
+};
+
+const updateArtistProfile = async (
+  userId: string,
+  data: IUpdateArtistProfileInput,
+  currentUserId: string,
+  currentUserRole: UserRole,
+) => {
+  const targetUser = await authDao.findUserById(userId);
+  if (!targetUser) throw new NotFoundError("User not found");
+
+  if (targetUser.role !== UserRole.ARTIST) {
+    throw new BadRequestError("User is not an artist");
+  }
+
+  const artist = await userDao.findArtistByUserId(userId);
+  if (!artist) throw new NotFoundError("Artist profile not found");
+
+  if (
+    data.manager_id !== undefined &&
+    currentUserRole !== UserRole.SUPER_ADMIN
+  ) {
+    throw new ForbiddentError(
+      "Only super admin can assign or change artist manager",
+    );
+  }
+
+  const userFields: { first_name?: string; last_name?: string | null } = {};
+  if (data.first_name !== undefined) userFields.first_name = data.first_name;
+  if (data.last_name !== undefined) userFields.last_name = data.last_name;
+
+  const artistFields: Record<string, any> = {};
+  const artistAllowed = [
+    "stage_name",
+    "dob",
+    "gender",
+    "address",
+    "first_release_year",
+    "manager_id",
+  ];
+  for (const field of artistAllowed) {
+    if ((data as any)[field] !== undefined) {
+      artistFields[field] = (data as any)[field];
+    }
+  }
+
+  await db.transaction(async (trx) => {
+    if (Object.keys(artistFields).length > 0) {
+      await artistDao.updateArtist(artist.id, artistFields, trx);
+    }
+    if (Object.keys(userFields).length > 0) {
+      await userDao.updateUser(userId, userFields, trx);
+    }
+  });
+
+  return await userDao.findUserById(userId);
 };
 
 const deleteArtist = async (
@@ -195,6 +269,8 @@ export const artistService = {
   getByManagerId,
   getById,
   update,
+  updateMyProfile,
+  updateArtistProfile,
   delete: deleteArtist,
   importCsv,
   exportCsv,
