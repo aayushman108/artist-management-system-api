@@ -22,7 +22,8 @@ export class InvitationRequestValidation {
           z
             .string()
             .max(100, { message: "Last name must not exceed 100 characters" })
-            .optional(),
+            .optional()
+            .nullable(),
         ),
         email: z.preprocess(
           emailPreprocessor,

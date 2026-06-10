@@ -42,8 +42,8 @@ userRouter.get(
 userRouter.patch(
   "/profile/me",
   [
-    authorize("UPDATE_OWN_PROFILE"),
     verifyJWT,
+    authorize("UPDATE_OWN_PROFILE"),
     validateRequest(UserValidation.updateProfileSchema),
   ],
   userController.updateProfile,
