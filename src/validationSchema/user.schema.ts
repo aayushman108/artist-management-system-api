@@ -23,7 +23,8 @@ export class UserValidation {
         z
           .string()
           .max(100, { message: "Last name must not exceed 100 characters" })
-          .optional(),
+          .optional()
+          .nullable(),
       ),
       email: z.preprocess(
         emailPreprocessor,
@@ -103,16 +104,14 @@ export class UserValidation {
             .nullable(),
         ),
       })
-      .transform(
-        ({ phone, dob, gender, address, firstName, lastName }) => ({
-          phone,
-          dob,
-          gender,
-          address,
-          first_name: firstName,
-          last_name: lastName,
-        }),
-      ),
+      .transform(({ phone, dob, gender, address, firstName, lastName }) => ({
+        phone,
+        dob,
+        gender,
+        address,
+        first_name: firstName,
+        last_name: lastName,
+      })),
   });
 
   // Delete user schema
@@ -133,5 +132,3 @@ export type IInviteUserInput = z.infer<
 export type IUpdateProfileInput = z.infer<
   typeof UserValidation.updateProfileSchema.shape.body
 >;
-
-
